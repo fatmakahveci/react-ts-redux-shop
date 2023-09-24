@@ -2,7 +2,7 @@
 
 import App from "./_app";
 
-const index = ({}) => {
+const index = (): JSX.Element => {
 	return (
 		<>
 			<App />
