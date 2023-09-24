@@ -1,12 +1,13 @@
 "use client";
 
-import './globals.css';
+import App from "./_app";
 
-const Home = ({ }): JSX.Element => {
-  return (
-    <div>
-    </div>
-  )
-}
+const index = ({}) => {
+	return (
+		<>
+			<App />
+		</>
+	);
+};
 
-export default Home;
+export default index;
