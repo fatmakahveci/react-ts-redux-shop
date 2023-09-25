@@ -24,6 +24,12 @@ export type LayoutProps = {
 	children: ReactNode;
 };
 
+export type NotificationProps = {
+	message: string;
+	status: string;
+	title: string;
+};
+
 export type Product = {
 	id: string;
 	description?: string;
@@ -33,4 +39,5 @@ export type Product = {
 
 export type UiSliceState = {
 	cartIsVisible: boolean;
+	notification: NotificationProps | null;
 };

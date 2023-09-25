@@ -7,7 +7,7 @@ import "./CartButton.css";
 
 const CartButton = (): JSX.Element => {
 	const dispatch: AppDispatch = useDispatch();
-	const cartQuantity = useSelector((state: RootState) => state.cart.totalQuantity);
+	const cartQuantity: number = useSelector((state: RootState) => state.cart.totalQuantity);
 	const toggleCartHandler = (): void => {
 		dispatch(uiActions.toggle());
 	};

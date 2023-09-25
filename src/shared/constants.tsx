@@ -24,4 +24,5 @@ export const INITIAL_CART_SLICE_STATE: CartSliceState = {
 
 export const INITIAL_UI_SLICE_STATE: UiSliceState = {
 	cartIsVisible: false,
+	notification: null,
 };
