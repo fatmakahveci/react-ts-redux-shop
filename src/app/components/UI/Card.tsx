@@ -1,7 +1,7 @@
 "use client";
 
+import { CardProps } from "@/shared/types";
 import { FC } from "react";
-import { CardProps } from "../../../shared/types";
 import "./Card.css";
 
 const Card: FC<CardProps> = ({ className, children }): JSX.Element => {

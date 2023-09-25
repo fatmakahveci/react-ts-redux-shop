@@ -1,6 +1,6 @@
 "use client";
 
-import CartButton from "../Cart/CartButton";
+import CartButton from "@/app/components/Cart/CartButton";
 import "./MainHeader.css";
 
 const MainHeader = (): JSX.Element => {

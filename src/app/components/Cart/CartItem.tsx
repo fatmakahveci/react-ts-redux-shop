@@ -1,10 +1,11 @@
 "use client";
 
 import { FC } from "react";
-import { CartItem } from "../../../shared/types";
+import { CartItem } from "@/shared/types";
 import "./CartItem.css";
 
 const CartItem: FC<CartItem> = ({
+	id,
 	price,
 	quantity,
 	title,

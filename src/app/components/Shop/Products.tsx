@@ -1,6 +1,6 @@
 "use client";
 
-import ProductItem from "./ProductItem";
+import ProductItem from "@/app/components/Shop/ProductItem";
 import "./Products.css";
 
 const Products = (): JSX.Element => {

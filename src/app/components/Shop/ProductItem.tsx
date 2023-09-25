@@ -1,8 +1,10 @@
 "use client";
 
+import Card from "@/app/components/UI/Card";
+import { AppDispatch } from "@/app/store";
+import { ProductItem } from "@/shared/types";
 import { FC } from "react";
-import { ProductItem } from "../../../shared/types";
-import Card from "../UI/Card";
+import { useDispatch } from "react-redux";
 import "./ProductItem.css";
 
 const ProductItem: FC<ProductItem> = ({
@@ -10,6 +12,8 @@ const ProductItem: FC<ProductItem> = ({
 	price,
 	title,
 }): JSX.Element => {
+	const dispatch: AppDispatch = useDispatch();
+
 	return (
 		<li className="item">
 			<Card className="">
