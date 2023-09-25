@@ -5,7 +5,7 @@ import { FC } from "react";
 import "./Card.css";
 
 const Card: FC<CardProps> = ({ className, children }): JSX.Element => {
-	return <div className={`card ${className ? className : ""}`}>{children}</div>;
+	return <div className={"card " + className}>{children}</div>;
 };
 
 export default Card;

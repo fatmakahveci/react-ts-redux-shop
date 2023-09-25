@@ -25,3 +25,9 @@
     display: flex;
     justify-content: flex-end;
 }
+
+.actions button {
+    background-color: transparent;
+    border-color: #1ad1b9;
+    color: #1ad1b9;
+}
