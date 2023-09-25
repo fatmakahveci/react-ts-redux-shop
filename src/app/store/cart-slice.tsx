@@ -1,18 +1,19 @@
 "use client";
 
 import { INITIAL_CART_SLICE_STATE } from "@/shared/constants";
-import { CartItem, CartSliceState } from "@/shared/types";
+import { CartItem, CartSliceState, Product } from "@/shared/types";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 
 const cartSlice = createSlice({
 	name: "cart",
 	initialState: INITIAL_CART_SLICE_STATE,
 	reducers: {
-		addItemToCart(state: CartSliceState, action: PayloadAction<CartItem>) {
-			const newItem: CartItem = action.payload;
+		addItemToCart(state: CartSliceState, action: PayloadAction<Product>) {
+			const newItem: Product = action.payload;
 			const existingItem: CartItem | undefined = state.items.find(
-				(item: CartItem) => item.id === item.id
+				(item: CartItem) => item.id === newItem.id
 			);
+			state.totalQuantity++;
 			if (!existingItem) {
 				state.items.push({
 					id: newItem.id,
@@ -22,11 +23,30 @@ const cartSlice = createSlice({
 					total: newItem.price,
 				});
 			} else {
-					existingItem.quantity++;
-					existingItem.total += newItem.price;
+				existingItem.quantity++;
+				existingItem.total += newItem.price;
 			}
 		},
-		removeItemFromCart() {},
+		removeItemFromCart(
+			state: CartSliceState,
+			action: PayloadAction<string>
+		) {
+			const id: string = action.payload;
+			const existingItem: CartItem | undefined = state.items.find(
+				(item: CartItem) => item.id === id
+			);
+			state.totalQuantity--;
+			if (existingItem) {
+				if (existingItem.quantity === 1) {
+					state.items = state.items.filter(
+						(item: CartItem) => item.id === id
+					);
+				} else {
+					existingItem.quantity--;
+					existingItem.total -= existingItem.price;
+				}
+			}
+		},
 	},
 });
 

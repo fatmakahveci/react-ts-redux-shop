@@ -24,7 +24,8 @@ export type LayoutProps = {
 	children: ReactNode;
 };
 
-export type ProductItem = {
+export type Product = {
+	id: string;
 	description: string;
 	price: number;
 	title: string;
