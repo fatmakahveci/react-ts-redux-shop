@@ -1,7 +1,10 @@
 "use client";
 
-import { FC } from "react";
+import { AppDispatch } from "@/app/store";
+import { cartActions } from "@/app/store/cart-slice";
 import { CartItem } from "@/shared/types";
+import { FC } from "react";
+import { useDispatch } from "react-redux";
 import "./CartItem.css";
 
 const CartItem: FC<CartItem> = ({
@@ -11,6 +14,22 @@ const CartItem: FC<CartItem> = ({
 	title,
 	total,
 }): JSX.Element => {
+	const dispatch: AppDispatch = useDispatch();
+
+	const addItemHandler = () => {
+		dispatch(
+			cartActions.addItemToCart({
+				id,
+				price,
+				title,
+			})
+		);
+	};
+
+	const removeItemHandler = () => {
+		dispatch(cartActions.removeItemFromCart(id));
+	};
+
 	return (
 		<li className="item">
 			<header>
@@ -27,8 +46,8 @@ const CartItem: FC<CartItem> = ({
 					x <span>{quantity}</span>
 				</div>
 				<div className="actions">
-					<button>-</button>
-					<button>+</button>
+					<button onClick={removeItemHandler}>-</button>
+					<button onClick={addItemHandler}>+</button>
 				</div>
 			</div>
 		</li>
