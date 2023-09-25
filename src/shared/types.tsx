@@ -26,7 +26,7 @@ export type LayoutProps = {
 
 export type Product = {
 	id: string;
-	description: string;
+	description?: string;
 	price: number;
 	title: string;
 };
