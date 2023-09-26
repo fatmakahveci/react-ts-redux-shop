@@ -47,6 +47,13 @@ const cartSlice = createSlice({
 				}
 			}
 		},
+		replaceCart(
+			state: CartSliceState,
+			action: PayloadAction<CartSliceState>
+		) {
+			state.totalQuantity = action.payload.totalQuantity;
+			state.items = action.payload.items;
+		},
 	},
 });
 

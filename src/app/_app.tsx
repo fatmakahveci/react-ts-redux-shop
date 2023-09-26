@@ -9,7 +9,9 @@ import { CartSliceState, NotificationProps } from "@/shared/types";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import "./globals.css";
-import { uiActions } from "./store/ui-slice";
+import { fetchCartData, sendCartData } from "./store/cart-actions";
+
+let isInitial: boolean = true;
 
 const App = (): JSX.Element => {
 	const dispatch: AppDispatch = useDispatch();
@@ -22,32 +24,16 @@ const App = (): JSX.Element => {
 	);
 
 	useEffect(() => {
-		const sendCartData = async (): Promise<void> => {
-			dispatch(
-				uiActions.showNotification({
-					message: "Sending cart data!",
-					status: "pending",
-					title: "Sending...",
-				})
-			);
+		dispatch(fetchCartData());
+	}, [dispatch]);
 
-			const response: Response = await fetch(
-				"https://react-ts-shop-49e4e-default-rtdb.firebaseio.com/cart.json",
-				{ method: "PUT", body: JSON.stringify(cart) }
-			);
+	useEffect(() => {
+		if (isInitial) {
+			isInitial = false;
+			return;
+		}
 
-			if (!response.ok) {
-				throw new Error("Sending cart data failed.");
-			}
-
-			dispatch(
-				uiActions.showNotification({
-					message: "Sent cart data successfully!",
-					status: "success",
-					title: "Success!",
-				})
-			);
-		};
+		dispatch(sendCartData(cart));
 	}, [cart, dispatch]);
 
 	return (
