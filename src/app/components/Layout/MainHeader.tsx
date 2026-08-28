@@ -3,7 +3,7 @@
 import CartButton from "@/app/components/Cart/CartButton";
 import "./MainHeader.css";
 
-const MainHeader = (): JSX.Element => {
+const MainHeader = (): React.ReactElement => {
 	return (
 		<header className="header">
 			<h1>ReduxCart</h1>

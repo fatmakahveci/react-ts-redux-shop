@@ -3,11 +3,12 @@
 import CartItem from "@/app/components/Cart/CartItem";
 import Card from "@/app/components/UI/Card";
 import { RootState } from "@/app/store/index";
+import type { CartItem as CartItemType } from "@/shared/types";
 import { useSelector } from "react-redux";
 import "./Cart.css";
 
-const Cart = (): JSX.Element => {
-	const cartItems: CartItem[] = useSelector(
+const Cart = (): React.ReactElement => {
+	const cartItems: CartItemType[] = useSelector(
 		(state: RootState) => state.cart.items
 	);
 
@@ -15,7 +16,7 @@ const Cart = (): JSX.Element => {
 		<Card className="cart">
 			<h2>Your Shopping Cart</h2>
 			<ul>
-				{cartItems.map((item: CartItem) => (
+				{cartItems.map((item: CartItemType) => (
 					<CartItem
 						key={item.id}
 						id={item.id}

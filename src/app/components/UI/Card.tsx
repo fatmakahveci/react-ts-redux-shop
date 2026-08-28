@@ -4,7 +4,7 @@ import { CardProps } from "@/shared/types";
 import { FC } from "react";
 import "./Card.css";
 
-const Card: FC<CardProps> = ({ className, children }): JSX.Element => {
+const Card: FC<CardProps> = ({ className, children }): React.ReactElement => {
 	return <div className={"card " + className}>{children}</div>;
 };
 

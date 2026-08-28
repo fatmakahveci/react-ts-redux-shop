@@ -13,7 +13,7 @@ const ProductItem: FC<Product> = ({
 	id,
 	price,
 	title,
-}): JSX.Element => {
+}): React.ReactElement => {
 	const dispatch: AppDispatch = useDispatch();
 
 	const addToCartHandler = (): void => {

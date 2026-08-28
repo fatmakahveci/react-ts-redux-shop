@@ -5,7 +5,7 @@ import { AppDispatch, RootState } from "@/app/store";
 import { uiActions } from "@/app/store/ui-slice";
 import "./CartButton.css";
 
-const CartButton = (): JSX.Element => {
+const CartButton = (): React.ReactElement => {
 	const dispatch: AppDispatch = useDispatch();
 	const cartQuantity: number = useSelector((state: RootState) => state.cart.totalQuantity);
 	const toggleCartHandler = (): void => {

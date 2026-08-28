@@ -8,7 +8,7 @@ const Notification: FC<NotificationProps> = ({
 	message,
 	status,
 	title,
-}): JSX.Element => {
+}): React.ReactElement => {
 	let successErrorClass: string = "";
 
 	if (status === "error") {

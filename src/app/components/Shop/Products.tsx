@@ -5,7 +5,7 @@ import { DUMMY_PRODUCTS } from "@/shared/constants";
 import { Product } from "@/shared/types";
 import "./Products.css";
 
-const Products = (): JSX.Element => {
+const Products = (): React.ReactElement => {
 	
 	return (
 		<section className="products">

@@ -2,18 +2,18 @@
 
 import { AppDispatch } from "@/app/store";
 import { cartActions } from "@/app/store/cart-slice";
-import { CartItem } from "@/shared/types";
+import type { CartItem as CartItemType } from "@/shared/types";
 import { FC } from "react";
 import { useDispatch } from "react-redux";
 import "./CartItem.css";
 
-const CartItem: FC<CartItem> = ({
+const CartItem: FC<CartItemType> = ({
 	id,
 	price,
 	quantity,
 	title,
 	total,
-}): JSX.Element => {
+}): React.ReactElement => {
 	const dispatch: AppDispatch = useDispatch();
 
 	const addItemHandler = () => {

@@ -7,7 +7,7 @@ import { cartActions } from "./cart-slice";
 
 export const fetchCartData = () => {
 	return async (dispatch: AppDispatch) => {
-		const fetchData = async () => {
+		const fetchData = async (): Promise<CartSliceState> => {
 			const response: Response = await fetch(
 				"https://react-ts-shop-49e4e-default-rtdb.firebaseio.com/cart.json"
 			);
@@ -16,20 +16,20 @@ export const fetchCartData = () => {
 				throw new Error("Couldn't fetch cart data!");
 			}
 
-			const data: Response = await response.json();
+			const data = (await response.json()) as CartSliceState;
 
 			return data;
 		};
 
 		try {
-			const cartData: any = await fetchData();
+			const cartData = await fetchData();
 			dispatch(
 				cartActions.replaceCart({
 					items: cartData.items || [],
 					totalQuantity: cartData.totalQuantity,
 				})
 			);
-		} catch (error: unknown) {
+		} catch {
 			dispatch(
 				uiActions.showNotification({
 					message: "Fetching cart data failed!",
@@ -78,7 +78,7 @@ export const sendCartData = (cart: CartSliceState) => {
 					title: "Success!",
 				})
 			);
-		} catch (error: unknown) {
+		} catch {
 			dispatch(
 				uiActions.showNotification({
 					message: "Sent cart data failed!",

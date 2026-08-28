@@ -13,7 +13,7 @@ import { fetchCartData, sendCartData } from "./store/cart-actions";
 
 let isInitial: boolean = true;
 
-const App = (): JSX.Element => {
+const App = (): React.ReactElement => {
 	const dispatch: AppDispatch = useDispatch();
 	const showCart: boolean = useSelector(
 		(state: RootState) => state.ui.cartIsVisible
