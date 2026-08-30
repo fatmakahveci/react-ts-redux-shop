@@ -7,6 +7,8 @@ const privateKeyPem = privateKey.export({ format: "pem", type: "pkcs8" }).toStri
 describe("Firebase REST client", () => {
 	beforeEach(() => {
 		vi.resetModules();
+		delete process.env.FIREBASE_DATABASE_EMULATOR_HOST;
+		delete process.env.FIREBASE_PROJECT_ID;
 		process.env.FIREBASE_DATABASE_URL = "https://example.firebaseio.com";
 		process.env.FIREBASE_CLIENT_EMAIL = "service-account@example.test";
 		process.env.FIREBASE_PRIVATE_KEY = privateKeyPem;
@@ -17,6 +19,8 @@ describe("Firebase REST client", () => {
 		delete process.env.FIREBASE_DATABASE_URL;
 		delete process.env.FIREBASE_CLIENT_EMAIL;
 		delete process.env.FIREBASE_PRIVATE_KEY;
+		delete process.env.FIREBASE_DATABASE_EMULATOR_HOST;
+		delete process.env.FIREBASE_PROJECT_ID;
 	});
 
 	it("authenticates with a service account and conditionally writes by ETag", async () => {
@@ -56,6 +60,42 @@ describe("Firebase REST client", () => {
 		const databaseWrite = fetchMock.mock.calls[2];
 		expect((databaseWrite[1]?.headers as Record<string, string>)["If-Match"]).toBe(
 			'"revision-1"'
+		);
+	});
+
+	it("uses a local demo emulator without service-account credentials", async () => {
+		delete process.env.FIREBASE_DATABASE_URL;
+		delete process.env.FIREBASE_CLIENT_EMAIL;
+		delete process.env.FIREBASE_PRIVATE_KEY;
+		process.env.FIREBASE_DATABASE_EMULATOR_HOST = "127.0.0.1:9000";
+		process.env.FIREBASE_PROJECT_ID = "demo-redux-cart";
+
+		const fetchMock = vi
+			.fn()
+			.mockResolvedValueOnce(
+				new Response(JSON.stringify(null), {
+					headers: { etag: '"null"' },
+					status: 200,
+				})
+			)
+			.mockResolvedValueOnce(new Response(JSON.stringify({ revision: 1 })));
+		vi.stubGlobal("fetch", fetchMock);
+		const { writeCartIfNewer } = await import("./firebase-rest");
+
+		const result = await writeCartIfNewer("local-session", {
+			items: [],
+			revision: 1,
+		});
+
+		expect(result.committed).toBe(true);
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+		const databaseRead = fetchMock.mock.calls[0];
+		const url = new URL(String(databaseRead[0]));
+		expect(url.origin).toBe("http://127.0.0.1:9000");
+		expect(url.pathname).toBe("/carts/local-session.json");
+		expect(url.searchParams.get("ns")).toBe("demo-redux-cart");
+		expect((databaseRead[1]?.headers as Record<string, string>).Authorization).toBe(
+			"Bearer owner"
 		);
 	});
 });

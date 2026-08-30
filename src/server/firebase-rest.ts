@@ -1,11 +1,22 @@
 import { createSign } from "node:crypto";
 import type { PersistedCart } from "@/shared/types";
 
-type FirebaseEnvironment = {
+type ProductionFirebaseEnvironment = {
+	mode: "production";
 	databaseURL: URL;
 	clientEmail: string;
 	privateKey: string;
 };
+
+type EmulatorFirebaseEnvironment = {
+	mode: "emulator";
+	databaseURL: URL;
+	namespace: string;
+};
+
+type FirebaseEnvironment =
+	| ProductionFirebaseEnvironment
+	| EmulatorFirebaseEnvironment;
 
 type AccessToken = {
 	expiresAt: number;
@@ -21,6 +32,41 @@ let cachedToken: AccessToken | undefined;
 let pendingToken: Promise<AccessToken> | undefined;
 
 function readFirebaseEnvironment(): FirebaseEnvironment {
+	const emulatorHost = process.env.FIREBASE_DATABASE_EMULATOR_HOST;
+	if (emulatorHost) {
+		if (emulatorHost.includes("://")) {
+			throw new Error(
+				"Firebase emulator host must not include a URL protocol."
+			);
+		}
+
+		const databaseURL = new URL(`http://${emulatorHost}`);
+		if (
+			!["127.0.0.1", "localhost"].includes(databaseURL.hostname) ||
+			!databaseURL.port ||
+			databaseURL.pathname !== "/" ||
+			databaseURL.search ||
+			databaseURL.hash ||
+			databaseURL.username ||
+			databaseURL.password
+		) {
+			throw new Error(
+				"Firebase emulator must use a localhost host and explicit port."
+			);
+		}
+
+		const namespace = process.env.FIREBASE_PROJECT_ID ?? "demo-redux-cart";
+		if (!/^demo-[a-z0-9-]+$/.test(namespace)) {
+			throw new Error("Firebase emulator project ID must start with demo-.");
+		}
+
+		return {
+			databaseURL,
+			mode: "emulator",
+			namespace,
+		};
+	}
+
 	const databaseURL = process.env.FIREBASE_DATABASE_URL;
 	const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
 	const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
@@ -40,6 +86,7 @@ function readFirebaseEnvironment(): FirebaseEnvironment {
 	return {
 		databaseURL: parsedDatabaseURL,
 		clientEmail,
+		mode: "production",
 		privateKey,
 	};
 }
@@ -50,6 +97,9 @@ function encodeJson(value: unknown): string {
 
 async function requestAccessToken(): Promise<AccessToken> {
 	const environment = readFirebaseEnvironment();
+	if (environment.mode !== "production") {
+		throw new Error("Firebase access tokens are only used in production mode.");
+	}
 	const issuedAt = Math.floor(Date.now() / 1_000);
 	const unsignedToken = `${encodeJson({ alg: "RS256", typ: "JWT" })}.${encodeJson({
 		aud: "https://oauth2.googleapis.com/token",
@@ -113,7 +163,11 @@ async function firebaseRequest(
 		`carts/${encodeURIComponent(sessionId)}.json`,
 		`${environment.databaseURL.toString().replace(/\/$/, "")}/`
 	);
-	const token = await getAccessToken();
+	if (environment.mode === "emulator") {
+		url.searchParams.set("ns", environment.namespace);
+	}
+	const token =
+		environment.mode === "emulator" ? "owner" : await getAccessToken();
 
 	return fetch(url, {
 		...init,

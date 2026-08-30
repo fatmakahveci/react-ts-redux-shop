@@ -7,6 +7,12 @@ test("adds, opens, increments and removes a cart item", async ({ page }) => {
 	await page.getByRole("button", { name: "Add to Cart" }).first().click();
 	const cartButton = page.getByRole("button", { name: /My Cart/i });
 	await expect(cartButton).toContainText("1");
+	await expect(page.getByRole("status")).toContainText(
+		"Sent cart data successfully!"
+	);
+
+	await page.reload();
+	await expect(cartButton).toContainText("1");
 
 	await cartButton.click();
 	await expect(page.getByRole("heading", { name: "Your Shopping Cart" })).toBeVisible();

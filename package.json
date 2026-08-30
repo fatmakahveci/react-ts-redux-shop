@@ -11,6 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "emulators": "npx --yes firebase-tools@15.28.2 emulators:start --only database --project demo-redux-cart",
+    "test:e2e:emulator": "FIREBASE_DATABASE_EMULATOR_HOST=127.0.0.1:9000 FIREBASE_PROJECT_ID=demo-redux-cart npx --yes firebase-tools@15.28.2 emulators:exec --only database --project demo-redux-cart \"npm run test:e2e\"",
     "check": "npm run lint && npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
