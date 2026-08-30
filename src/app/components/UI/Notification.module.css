@@ -1,0 +1,32 @@
+.notification {
+	width: 100%;
+	min-height: 3rem;
+	background-color: #0d72ad;
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.75rem 10%;
+	align-items: center;
+	color: white;
+}
+
+.notification h2,
+.notification p {
+	font-size: 1rem;
+	margin: 0;
+}
+
+.error {
+	background-color: #690000;
+}
+
+.success {
+	background-color: #087c6c;
+}
+
+@media (max-width: 32rem) {
+	.notification {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+}

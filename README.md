@@ -1,46 +1,66 @@
-# Getting Started with Create React App
+# ReduxCart
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack shopping-cart example built with Next.js App Router, React, Redux Toolkit, TypeScript, Firebase Realtime Database and Yup.
 
-## Available Scripts
+## Architecture
 
-In the project directory, you can run:
+- Server Components own the root layout and metadata.
+- A small client provider creates an isolated Redux store.
+- The browser talks only to the same-origin `/api/cart` route.
+- Firebase service-account credentials remain server-side.
+- Each anonymous visitor receives a 30-day, HttpOnly cart-session cookie and a separate database record.
+- Runtime schemas validate both incoming requests and stored Firebase data.
+- Debounced client writes and monotonic revisions prevent older requests from overwriting newer cart state.
 
-### `npm start`
+## Requirements
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- Node.js 24+
+- npm
+- A Firebase Realtime Database and a service account with database access
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Setup
 
-### `npm test`
+1. Install dependencies:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+   ```bash
+   npm ci
+   ```
 
-### `npm run build`
+2. Copy `.env.example` to `.env.local` and supply the Firebase Admin values.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+3. Deny direct client access to Realtime Database. The repository includes `database.rules.json` and `firebase.json` with the required default-deny rules. Apply them in the Firebase console or with `npx firebase-tools deploy --only database`. Authenticated service-account requests originate only from the Next.js server.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+4. Start development mode:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+   ```bash
+   npm run dev
+   ```
 
-### `npm run eject`
+5. Open [http://localhost:3000](http://localhost:3000).
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Without Firebase environment variables, the storefront still renders and reports that cart persistence is unavailable; production deployments should always configure them.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Commands
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the development server |
+| `npm run build` | Create a production build |
+| `npm start` | Run the production server after a build |
+| `npm run lint` | Run ESLint |
+| `npm run typecheck` | Run TypeScript without emitting files |
+| `npm test` | Run unit and component tests |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run test:e2e` | Run Playwright browser tests |
+| `npm run check` | Run lint, typecheck, tests and build |
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## Security notes
 
-## Learn More
+- Never expose `FIREBASE_PRIVATE_KEY` or commit a populated environment file.
+- Keep Firebase client rules default-deny and grant database access only to the server service account.
+- The cart cookie is opaque, HttpOnly, same-site and secure in production.
+- Cart payload size, origin, field types, item counts, quantities and prices are validated server-side.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Current product scope
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Products are intentionally static demo data. The cart is anonymous and session-based; a real checkout flow should add authenticated accounts, a server-owned product catalog, inventory validation, tax/shipping calculation and payment processing.

@@ -1,20 +1,17 @@
-"use client";
-
-import { AppDispatch } from "@/app/store";
 import { cartActions } from "@/app/store/cart-slice";
+import { useAppDispatch } from "@/app/store/hooks";
+import { formatCurrency } from "@/shared/format";
 import type { CartItem as CartItemType } from "@/shared/types";
-import { FC } from "react";
-import { useDispatch } from "react-redux";
-import "./CartItem.css";
+import type { FC } from "react";
+import styles from "./CartItem.module.css";
 
 const CartItem: FC<CartItemType> = ({
 	id,
 	price,
 	quantity,
 	title,
-	total,
 }): React.ReactElement => {
-	const dispatch: AppDispatch = useDispatch();
+	const dispatch = useAppDispatch();
 
 	const addItemHandler = () => {
 		dispatch(
@@ -31,23 +28,36 @@ const CartItem: FC<CartItemType> = ({
 	};
 
 	return (
-		<li className="item">
+		<li className={styles.item}>
 			<header>
 				<h3>{title}</h3>
-				<div className="price">
-					${total.toFixed(2)}{" "}
-					<span className="itemprice">
-						(${price.toFixed(2)}/item)
+				<div className={styles.price}>
+					{formatCurrency(price * quantity)}{" "}
+					<span className={styles.itemPrice}>
+						({formatCurrency(price)}/item)
 					</span>
 				</div>
 			</header>
-			<div className="details">
-				<div className="quantity">
+			<div className={styles.details}>
+				<div className={styles.quantity}>
 					x <span>{quantity}</span>
 				</div>
-				<div className="actions">
-					<button onClick={removeItemHandler}>-</button>
-					<button onClick={addItemHandler}>+</button>
+				<div className={styles.actions}>
+					<button
+						aria-label={`Remove one ${title} from cart`}
+						onClick={removeItemHandler}
+						type="button"
+					>
+						−
+					</button>
+					<button
+						aria-label={`Add one more ${title} to cart`}
+						disabled={quantity >= 99}
+						onClick={addItemHandler}
+						type="button"
+					>
+						+
+					</button>
 				</div>
 			</div>
 		</li>

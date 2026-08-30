@@ -1,16 +1,21 @@
-"use client";
-
-import { ReactNode } from "react";
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import "./globals.css";
+import Providers from "./providers";
+
+export const metadata: Metadata = {
+	description: "A secure, session-based shopping cart built with Next.js and Redux.",
+	title: "ReduxCart",
+};
 
 export default function RootLayout({
 	children,
-}: {
-	children: ReactNode;
-}): React.ReactElement {
+}: Readonly<{ children: ReactNode }>): React.ReactElement {
 	return (
 		<html lang="en">
-			<body className="{body}">{children}</body>
+			<body>
+				<Providers>{children}</Providers>
+			</body>
 		</html>
 	);
 }

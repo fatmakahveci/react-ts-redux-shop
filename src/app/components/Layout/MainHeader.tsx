@@ -1,13 +1,11 @@
-"use client";
-
 import CartButton from "@/app/components/Cart/CartButton";
-import "./MainHeader.css";
+import styles from "./MainHeader.module.css";
 
 const MainHeader = (): React.ReactElement => {
 	return (
-		<header className="header">
+		<header className={styles.header}>
 			<h1>ReduxCart</h1>
-			<nav>
+			<nav aria-label="Shopping cart">
 				<ul>
 					<li>
 						<CartButton />

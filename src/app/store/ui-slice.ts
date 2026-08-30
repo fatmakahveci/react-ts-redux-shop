@@ -1,8 +1,6 @@
-"use client";
-
 import { INITIAL_UI_SLICE_STATE } from "@/shared/constants";
-import { NotificationProps, UiSliceState } from "@/shared/types";
-import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import type { NotificationProps, UiSliceState } from "@/shared/types";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 const uiSlice = createSlice({
 	name: "user_interface",
@@ -20,6 +18,9 @@ const uiSlice = createSlice({
 				status: action.payload.status,
 				title: action.payload.title,
 			};
+		},
+		hideNotification(state: UiSliceState) {
+			state.notification = null;
 		},
 	},
 });

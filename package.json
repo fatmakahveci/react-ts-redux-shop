@@ -6,28 +6,32 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.12.0",
-    "formik": "^2.4.9",
     "next": "^16.3.3",
-    "node-fetch": "^3.3.2",
     "react": "^19.2.8",
-    "react-datepicker": "^9.1.0",
     "react-dom": "^19.2.8",
     "react-redux": "^9.3.0",
     "yup": "^1.7.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
     "@types/node": "^26.4.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
-    "autoprefixer": "^10.5.4",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.3.3",
-    "postcss": "^8.5.26",
-    "tailwindcss": "^4.3.3",
-    "typescript": "^6.0.3"
+    "jsdom": "^29.0.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.11"
   }
 }

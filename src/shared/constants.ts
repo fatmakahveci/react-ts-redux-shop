@@ -1,6 +1,4 @@
-"use client";
-
-import { CartSliceState, Product, UiSliceState } from "@/shared/types";
+import type { CartSliceState, Product, UiSliceState } from "@/shared/types";
 
 export const DUMMY_PRODUCTS: Product[] = [
 	{
@@ -18,8 +16,9 @@ export const DUMMY_PRODUCTS: Product[] = [
 ];
 
 export const INITIAL_CART_SLICE_STATE: CartSliceState = {
+	hydrated: false,
 	items: [],
-	totalQuantity: 0,
+	revision: 0,
 };
 
 export const INITIAL_UI_SLICE_STATE: UiSliceState = {

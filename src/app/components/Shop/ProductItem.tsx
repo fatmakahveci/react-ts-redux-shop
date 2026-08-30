@@ -1,12 +1,10 @@
-"use client";
-
 import Card from "@/app/components/UI/Card";
-import { AppDispatch } from "@/app/store";
 import { cartActions } from "@/app/store/cart-slice";
-import { Product } from "@/shared/types";
-import { FC } from "react";
-import { useDispatch } from "react-redux";
-import "./ProductItem.css";
+import { useAppDispatch } from "@/app/store/hooks";
+import { formatCurrency } from "@/shared/format";
+import type { Product } from "@/shared/types";
+import type { FC } from "react";
+import styles from "./ProductItem.module.css";
 
 const ProductItem: FC<Product> = ({
 	description,
@@ -14,7 +12,7 @@ const ProductItem: FC<Product> = ({
 	price,
 	title,
 }): React.ReactElement => {
-	const dispatch: AppDispatch = useDispatch();
+	const dispatch = useAppDispatch();
 
 	const addToCartHandler = (): void => {
 		dispatch(
@@ -28,15 +26,17 @@ const ProductItem: FC<Product> = ({
 	};
 
 	return (
-		<li className="item">
-			<Card className="">
+		<li className={styles.item}>
+			<Card>
 				<header>
 					<h3>{title}</h3>
-					<div className="price">${price.toFixed(2)}</div>
+					<div className={styles.price}>{formatCurrency(price)}</div>
 				</header>
 				<p>{description}</p>
-				<div className="actions">
-					<button onClick={addToCartHandler}>Add to Cart</button>
+				<div className={styles.actions}>
+					<button onClick={addToCartHandler} type="button">
+						Add to Cart
+					</button>
 				</div>
 			</Card>
 		</li>

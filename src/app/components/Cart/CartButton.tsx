@@ -1,21 +1,29 @@
-"use client";
-
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/app/store";
+import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { uiActions } from "@/app/store/ui-slice";
-import "./CartButton.css";
+import styles from "./CartButton.module.css";
 
 const CartButton = (): React.ReactElement => {
-	const dispatch: AppDispatch = useDispatch();
-	const cartQuantity: number = useSelector((state: RootState) => state.cart.totalQuantity);
+	const dispatch = useAppDispatch();
+	const cartIsVisible = useAppSelector((state) => state.ui.cartIsVisible);
+	const cartQuantity = useAppSelector((state) =>
+		state.cart.items.reduce((total, item) => total + item.quantity, 0)
+	);
 	const toggleCartHandler = (): void => {
 		dispatch(uiActions.toggle());
 	};
 
 	return (
-		<button className="button" onClick={toggleCartHandler}>
+		<button
+			aria-controls="shopping-cart"
+			aria-expanded={cartIsVisible}
+			className={styles.button}
+			onClick={toggleCartHandler}
+			type="button"
+		>
 			<span>My Cart</span>
-			<span className="badge">{cartQuantity}</span>
+			<span aria-label={`${cartQuantity} items`} className={styles.badge}>
+				{cartQuantity}
+			</span>
 		</button>
 	);
 };

@@ -1,9 +1,7 @@
-"use client";
-
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 export type CardProps = {
-	className: string;
+	className?: string;
 	children: ReactNode;
 };
 
@@ -12,12 +10,15 @@ export type CartItem = {
 	price: number;
 	quantity: number;
 	title: string;
-	total: number;
 };
 
-export type CartSliceState = {
+export type PersistedCart = {
 	items: CartItem[];
-	totalQuantity: number;
+	revision: number;
+};
+
+export type CartSliceState = PersistedCart & {
+	hydrated: boolean;
 };
 
 export type LayoutProps = {
@@ -26,7 +27,7 @@ export type LayoutProps = {
 
 export type NotificationProps = {
 	message: string;
-	status: string;
+	status: "error" | "pending" | "success";
 	title: string;
 };
 

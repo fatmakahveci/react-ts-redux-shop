@@ -1,8 +1,11 @@
-"use client";
-
 import { INITIAL_CART_SLICE_STATE } from "@/shared/constants";
-import { CartItem, CartSliceState, Product } from "@/shared/types";
-import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import type {
+	CartItem,
+	CartSliceState,
+	PersistedCart,
+	Product,
+} from "@/shared/types";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 const cartSlice = createSlice({
 	name: "cart",
@@ -13,19 +16,22 @@ const cartSlice = createSlice({
 			const existingItem: CartItem | undefined = state.items.find(
 				(item: CartItem) => item.id === newItem.id
 			);
-			state.totalQuantity++;
+
+			if (existingItem?.quantity === 99) {
+				return;
+			}
+
 			if (!existingItem) {
 				state.items.push({
 					id: newItem.id,
 					price: newItem.price,
 					quantity: 1,
 					title: newItem.title,
-					total: newItem.price,
 				});
 			} else {
 				existingItem.quantity++;
-				existingItem.total += newItem.price;
 			}
+			state.revision++;
 		},
 		removeItemFromCart(
 			state: CartSliceState,
@@ -35,24 +41,29 @@ const cartSlice = createSlice({
 			const existingItem: CartItem | undefined = state.items.find(
 				(item: CartItem) => item.id === id
 			);
-			state.totalQuantity--;
-			if (existingItem) {
-				if (existingItem.quantity === 1) {
-					state.items = state.items.filter(
-						(item: CartItem) => item.id !== id
-					);
-				} else {
-					existingItem.quantity--;
-					existingItem.total -= existingItem.price;
-				}
+			if (!existingItem) {
+				return;
 			}
+
+			if (existingItem.quantity === 1) {
+				state.items = state.items.filter(
+					(item: CartItem) => item.id !== id
+				);
+			} else {
+				existingItem.quantity--;
+			}
+			state.revision++;
 		},
-		replaceCart(
+		hydrateCart(
 			state: CartSliceState,
-			action: PayloadAction<CartSliceState>
+			action: PayloadAction<PersistedCart>
 		) {
-			state.totalQuantity = action.payload.totalQuantity;
+			state.hydrated = true;
 			state.items = action.payload.items;
+			state.revision = action.payload.revision;
+		},
+		markHydrated(state: CartSliceState) {
+			state.hydrated = true;
 		},
 	},
 });
