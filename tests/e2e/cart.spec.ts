@@ -77,8 +77,9 @@ test("preserves concurrent mutations from two tabs", async ({ context, page }) =
 
 	await page.reload();
 	await page.getByRole("button", { name: /My Cart/i }).click();
-	await expect(page.getByRole("heading", { name: "My First Book" })).toBeVisible();
-	await expect(page.getByRole("heading", { name: "My Second Book" })).toBeVisible();
+	const cart = page.getByLabel("Your Shopping Cart");
+	await expect(cart.getByRole("heading", { name: "My First Book" })).toBeVisible();
+	await expect(cart.getByRole("heading", { name: "My Second Book" })).toBeVisible();
 });
 
 test("has no automatically detectable accessibility violations", async ({ page }) => {
