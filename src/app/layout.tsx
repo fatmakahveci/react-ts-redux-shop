@@ -6,7 +6,7 @@ import Providers from "./providers";
 export const metadata: Metadata = {
 	description:
 		"Discover thoughtfully selected independent books and keep your reading list in a secure, session-based cart.",
-	title: "ReduxCart | Independent Books",
+	title: "The Quiet Shelf | Independent Books",
 };
 
 export default function RootLayout({

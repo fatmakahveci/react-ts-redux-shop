@@ -10,9 +10,11 @@ const MainHeader = (): React.ReactElement => {
 				<span>Independent stories, thoughtfully chosen</span>
 			</aside>
 			<header className={styles.header}>
-				<a className={styles.brand} href="#catalog">
-					<h1>ReduxCart</h1>
-					<small>Independent books</small>
+				<a aria-label="The Quiet Shelf home" className={styles.brand} href="#catalog">
+					<h1>
+						<span>The Quiet</span> Shelf
+					</h1>
+					<small>Books &amp; editions</small>
 				</a>
 				<nav aria-label="Primary navigation">
 					<ul>

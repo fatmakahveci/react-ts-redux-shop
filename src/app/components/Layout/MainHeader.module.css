@@ -44,6 +44,10 @@
 	margin: 0;
 }
 
+.brand h1 span {
+	font-style: italic;
+}
+
 .brand small {
 	color: #59635c;
 	font-size: 0.66rem;

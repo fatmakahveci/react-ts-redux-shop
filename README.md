@@ -1,4 +1,4 @@
-# ReduxCart
+# The Quiet Shelf
 
 A full-stack shopping-cart example built with Next.js App Router, React, Redux Toolkit, TypeScript, Firebase Realtime Database and Yup.
 
