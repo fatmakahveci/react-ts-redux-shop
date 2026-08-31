@@ -1,7 +1,7 @@
 import CartSliceReducer, { cartActions } from "@/app/store/cart-slice";
-import { sendCartData } from "@/app/store/cart-actions";
+import { sendCartMutation } from "@/app/store/cart-actions";
 import UiSliceReducer from "@/app/store/ui-slice";
-import type { PersistedCart } from "@/shared/types";
+import type { CartMutation } from "@/shared/types";
 import {
 	combineReducers,
 	configureStore,
@@ -24,19 +24,26 @@ export function makeStore() {
 			cartActions.addItemToCart,
 			cartActions.removeItemFromCart
 		),
-		effect: async (_, listenerApi) => {
-			listenerApi.cancelActiveListeners();
-			await listenerApi.delay(400);
-
+		effect: async (action, listenerApi) => {
+			const originalState = listenerApi.getOriginalState() as RootState;
 			const state = listenerApi.getState() as RootState;
-			if (!state.cart.hydrated) return;
+			if (
+				!state.cart.hydrated ||
+				state.cart.revision === originalState.cart.revision
+			) {
+				return;
+			}
 
-			const cart: PersistedCart = {
-				items: state.cart.items,
-				revision: state.cart.revision,
-			};
+			let mutation: CartMutation;
+			if (cartActions.addItemToCart.match(action)) {
+				mutation = { delta: 1, productId: action.payload.id };
+			} else if (cartActions.removeItemFromCart.match(action)) {
+				mutation = { delta: -1, productId: action.payload };
+			} else {
+				return;
+			}
 			const dispatch = listenerApi.dispatch as AppDispatch;
-			await dispatch(sendCartData(cart, listenerApi.signal));
+			await dispatch(sendCartMutation(mutation));
 		},
 	});
 

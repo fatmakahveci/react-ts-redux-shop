@@ -1,7 +1,13 @@
-import { validatePersistedCart } from "@/shared/cart-schema";
-import type { PersistedCart } from "@/shared/types";
-import { readCart, writeCartIfNewer } from "@/server/firebase-rest";
 import { randomUUID } from "node:crypto";
+import { mutateCart, readCart } from "@/server/firebase-rest";
+import {
+	isJsonRequest,
+	isSameOriginRequest,
+	PayloadTooLargeError,
+	readLimitedJson,
+} from "@/server/http";
+import { logServerError } from "@/server/logger";
+import { validateCartMutation } from "@/shared/cart-schema";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { ValidationError } from "yup";
@@ -10,7 +16,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const CART_SESSION_COOKIE = "cart_session";
-const EMPTY_CART: PersistedCart = { items: [], revision: 0 };
+const MAX_MUTATION_BYTES = 2_048;
 const UUID_PATTERN =
 	/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -34,62 +40,72 @@ async function getCartSessionId(): Promise<string> {
 	return sessionId;
 }
 
-function json(data: unknown, status = 200): NextResponse {
-	return NextResponse.json(data, {
-		status,
-		headers: { "Cache-Control": "no-store" },
-	});
+function json(
+	data: unknown,
+	requestId: string,
+	status = 200,
+	headers?: HeadersInit
+): NextResponse {
+	const responseHeaders = new Headers(headers);
+	responseHeaders.set("Cache-Control", "no-store");
+	responseHeaders.set("X-Request-Id", requestId);
+	return NextResponse.json(data, { headers: responseHeaders, status });
 }
 
 export async function GET(): Promise<NextResponse> {
+	const requestId = randomUUID();
 	try {
 		const sessionId = await getCartSessionId();
-		const rawCart = await readCart(sessionId);
-		const cart = rawCart
-			? await validatePersistedCart(rawCart)
-			: EMPTY_CART;
-
-		return json({ cart });
+		return json({ cart: await readCart(sessionId) }, requestId);
 	} catch (error) {
-		console.error("Unable to read cart", error);
-		return json({ message: "Cart service is unavailable." }, 503);
+		logServerError("cart.read.failed", error, requestId);
+		return json({ message: "Cart service is unavailable." }, requestId, 503);
 	}
 }
 
-export async function PUT(request: Request): Promise<NextResponse> {
+export async function PATCH(request: Request): Promise<NextResponse> {
+	const requestId = randomUUID();
 	try {
-		const origin = request.headers.get("origin");
-		const host = request.headers.get("host");
-		if (origin && (!host || new URL(origin).host !== host)) {
-			return json({ message: "Cross-origin request rejected." }, 403);
-		}
-
-		const rawBody = await request.text();
-		if (new TextEncoder().encode(rawBody).byteLength > 50_000) {
-			return json({ message: "Cart payload is too large." }, 413);
-		}
-
-		const cart = await validatePersistedCart(JSON.parse(rawBody));
-		const sessionId = await getCartSessionId();
-		const result = await writeCartIfNewer(sessionId, cart);
-
-		if (!result.committed) {
-			const currentCart = result.current
-				? await validatePersistedCart(result.current)
-				: EMPTY_CART;
+		if (!isSameOriginRequest(request)) {
 			return json(
-				{ cart: currentCart, message: "A newer cart already exists." },
-				409
+				{ message: "Cross-origin request rejected." },
+				requestId,
+				403
+			);
+		}
+		if (!isJsonRequest(request)) {
+			return json(
+				{ message: "Content-Type must be application/json." },
+				requestId,
+				415
 			);
 		}
 
-		return json({ cart });
-	} catch (error) {
-		if (error instanceof ValidationError || error instanceof SyntaxError) {
-			return json({ message: "Invalid cart payload." }, 400);
+		const mutation = await validateCartMutation(
+			await readLimitedJson(request, MAX_MUTATION_BYTES)
+		);
+		const sessionId = await getCartSessionId();
+		const result = await mutateCart(sessionId, mutation);
+
+		if (result.rateLimited) {
+			return json(
+				{ cart: result.cart, message: "Too many cart updates." },
+				requestId,
+				429,
+				{ "Retry-After": String(result.retryAfter ?? 60) }
+			);
 		}
 
-		console.error("Unable to save cart", error);
-		return json({ message: "Cart service is unavailable." }, 503);
+		return json({ cart: result.cart }, requestId);
+	} catch (error) {
+		if (error instanceof PayloadTooLargeError) {
+			return json({ message: "Cart payload is too large." }, requestId, 413);
+		}
+		if (error instanceof ValidationError || error instanceof SyntaxError) {
+			return json({ message: "Invalid cart mutation." }, requestId, 400);
+		}
+
+		logServerError("cart.mutation.failed", error, requestId);
+		return json({ message: "Cart service is unavailable." }, requestId, 503);
 	}
 }

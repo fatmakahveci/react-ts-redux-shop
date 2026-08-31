@@ -15,6 +15,12 @@ export const DUMMY_PRODUCTS: Product[] = [
 	},
 ];
 
+export const MAX_CART_REVISION = Number.MAX_SAFE_INTEGER - 1;
+
+export function getProduct(productId: string): Product | undefined {
+	return DUMMY_PRODUCTS.find((product) => product.id === productId);
+}
+
 export const INITIAL_CART_SLICE_STATE: CartSliceState = {
 	hydrated: false,
 	items: [],

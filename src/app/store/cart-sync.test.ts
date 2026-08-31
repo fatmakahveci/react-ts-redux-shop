@@ -1,38 +1,59 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchCartData } from "./cart-actions";
 import { cartActions } from "./cart-slice";
 import { makeStore } from ".";
 
-const product = { id: "p1", price: 6, title: "Book" };
+const product = { id: "p1", price: 6, title: "My First Book" };
 
 describe("cart synchronization", () => {
-	beforeEach(() => vi.useFakeTimers());
-	afterEach(() => {
-		vi.useRealTimers();
-		vi.unstubAllGlobals();
-	});
+	afterEach(() => vi.unstubAllGlobals());
 
-	it("debounces rapid mutations and persists only the latest revision", async () => {
-		const fetchMock = vi.fn().mockResolvedValue(
-			new Response(JSON.stringify({ cart: { items: [], revision: 2 } }), {
-				headers: { "Content-Type": "application/json" },
-				status: 200,
-			})
-		);
+	it("sends server-owned atomic mutations for every local change", async () => {
+		const fetchMock = vi
+			.fn()
+			.mockResolvedValueOnce(
+				new Response(
+					JSON.stringify({
+						cart: { items: [{ ...product, quantity: 1 }], revision: 1 },
+					}),
+					{ headers: { "Content-Type": "application/json" }, status: 200 }
+				)
+			)
+			.mockResolvedValueOnce(
+				new Response(
+					JSON.stringify({
+						cart: { items: [{ ...product, quantity: 2 }], revision: 2 },
+					}),
+					{ headers: { "Content-Type": "application/json" }, status: 200 }
+				)
+			);
 		vi.stubGlobal("fetch", fetchMock);
 		const store = makeStore();
 		store.dispatch(cartActions.hydrateCart({ items: [], revision: 0 }));
 
 		store.dispatch(cartActions.addItemToCart(product));
 		store.dispatch(cartActions.addItemToCart(product));
-		await vi.advanceTimersByTimeAsync(450);
+		await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
 
-		expect(fetchMock).toHaveBeenCalledTimes(1);
-		const request = fetchMock.mock.calls[0][1] as RequestInit;
-		expect(JSON.parse(request.body as string)).toMatchObject({
-			items: [{ quantity: 2 }],
-			revision: 2,
+		expect(JSON.parse(fetchMock.mock.calls[0][1]?.body as string)).toEqual({
+			delta: 1,
+			productId: "p1",
 		});
+		expect(fetchMock.mock.calls[0][1]?.method).toBe("PATCH");
+	});
+
+	it("ignores stale mutation responses", () => {
+		const store = makeStore();
+		store.dispatch(cartActions.hydrateCart({ items: [], revision: 5 }));
+
+		store.dispatch(
+			cartActions.reconcileCart({
+				items: [{ ...product, quantity: 1 }],
+				revision: 4,
+			})
+		);
+
+		expect(store.getState().cart).toMatchObject({ items: [], revision: 5 });
 	});
 
 	it("unblocks the storefront and reports an error when hydration fails", async () => {

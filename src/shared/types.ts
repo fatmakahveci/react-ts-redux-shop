@@ -17,6 +17,11 @@ export type PersistedCart = {
 	revision: number;
 };
 
+export type CartMutation = {
+	delta: -1 | 1;
+	productId: string;
+};
+
 export type CartSliceState = PersistedCart & {
 	hydrated: boolean;
 };

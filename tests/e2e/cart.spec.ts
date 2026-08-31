@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 test("adds, opens, increments and removes a cart item", async ({ page }) => {
@@ -21,4 +22,51 @@ test("adds, opens, increments and removes a cart item", async ({ page }) => {
 
 	await page.getByRole("button", { name: /Remove one My First Book/i }).click();
 	await expect(cartButton).toContainText("1");
+});
+
+test("preserves concurrent mutations from two tabs", async ({ context, page }) => {
+	const secondPage = await context.newPage();
+	await page.goto("/");
+	await secondPage.goto("/");
+	await Promise.all([
+		expect(page.getByRole("heading", { name: /favorite products/i })).toBeVisible(),
+		expect(
+			secondPage.getByRole("heading", { name: /favorite products/i })
+		).toBeVisible(),
+	]);
+
+	const firstBook = page
+		.getByRole("listitem")
+		.filter({ hasText: "My First Book" });
+	const secondBook = secondPage
+		.getByRole("listitem")
+		.filter({ hasText: "My Second Book" });
+	await Promise.all([
+		firstBook.getByRole("button", { name: "Add to Cart" }).click(),
+		secondBook.getByRole("button", { name: "Add to Cart" }).click(),
+	]);
+	await Promise.all([
+		expect(page.getByRole("status")).toContainText(
+			"Sent cart data successfully!"
+		),
+		expect(secondPage.getByRole("status")).toContainText(
+			"Sent cart data successfully!"
+		),
+	]);
+
+	await page.reload();
+	await page.getByRole("button", { name: /My Cart/i }).click();
+	await expect(page.getByRole("heading", { name: "My First Book" })).toBeVisible();
+	await expect(page.getByRole("heading", { name: "My Second Book" })).toBeVisible();
+});
+
+test("has no automatically detectable accessibility violations", async ({ page }) => {
+	const response = await page.goto("/");
+	await expect(page.getByRole("heading", { name: /favorite products/i })).toBeVisible();
+
+	const accessibilityScan = await new AxeBuilder({ page }).analyze();
+	expect(accessibilityScan.violations).toEqual([]);
+	const csp = response?.headers()["content-security-policy"];
+	expect(csp).toContain("'nonce-");
+	expect(csp).not.toContain("script-src 'self' 'unsafe-inline'");
 });

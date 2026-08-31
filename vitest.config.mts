@@ -9,7 +9,15 @@ export default defineConfig({
 	},
 	test: {
 		coverage: {
+			exclude: ["src/**/*.test.{ts,tsx}", "src/test/**", "src/shared/types.ts"],
+			include: ["src/**/*.{ts,tsx}"],
 			reporter: ["text", "html"],
+			thresholds: {
+				branches: 65,
+				functions: 80,
+				lines: 80,
+				statements: 80,
+			},
 		},
 		environment: "jsdom",
 		exclude: ["tests/e2e/**", "node_modules/**", ".next/**"],

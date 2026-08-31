@@ -4,7 +4,6 @@ import type { Product } from "@/shared/types";
 import styles from "./Products.module.css";
 
 const Products = (): React.ReactElement => {
-	
 	return (
 		<section className={styles.products}>
 			<h2>Buy your favorite products</h2>

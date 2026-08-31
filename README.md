@@ -10,7 +10,9 @@ A full-stack shopping-cart example built with Next.js App Router, React, Redux T
 - Firebase service-account credentials remain server-side.
 - Each anonymous visitor receives a 30-day, HttpOnly cart-session cookie and a separate database record.
 - Runtime schemas validate both incoming requests and stored Firebase data.
-- Debounced client writes and monotonic revisions prevent older requests from overwriting newer cart state.
+- The client sends only product IDs and `+1/-1` mutations; the server owns prices, titles and revisions.
+- Firebase ETag transactions serialize mutations, preserving concurrent changes from multiple tabs.
+- Cart records carry expiry and persistent rate-limit metadata; an authenticated cleanup endpoint removes expired records.
 
 ## Requirements
 
@@ -52,17 +54,21 @@ The committed `demo-redux-cart` project ID is intentionally demo-only. Firebase 
 
 ## Production setup
 
-1. Copy `.env.example` to `.env.local` and supply the three Firebase service-account values. Do not set `FIREBASE_DATABASE_EMULATOR_HOST` in production.
+1. Copy `.env.example` to `.env.local` and supply the three Firebase service-account values plus a long random `CRON_SECRET`. Do not set `FIREBASE_DATABASE_EMULATOR_HOST` in production.
 
-2. Deny direct client access to Realtime Database. The repository includes `database.rules.json` and `firebase.json` with the required default-deny rules. Apply them in the Firebase console or with `npx firebase-tools deploy --only database`. Authenticated service-account requests originate only from the Next.js server.
+2. Deny direct client access to Realtime Database. The repository includes `database.rules.json` and `firebase.json` with the required default-deny rules. Apply them in the Firebase console or with `npx firebase-tools@15.28.2 deploy --only database`. Authenticated service-account requests originate only from the Next.js server.
 
-3. Start development mode:
+3. Schedule a daily authenticated `POST /api/internal/cleanup-carts` request so expired anonymous carts are deleted. Send `Authorization: Bearer <CRON_SECRET>`. Each invocation safely removes up to 1,000 expired records in bounded, ETag-protected batches.
+
+4. Put a managed WAF or reverse proxy rate limit in front of public deployments. The application also enforces a persistent per-session limit, but infrastructure-level limits are required to prevent attackers from creating unlimited new sessions.
+
+5. Start development mode:
 
    ```bash
    npm run dev
    ```
 
-4. Open [http://localhost:3000](http://localhost:3000).
+6. Open [http://localhost:3000](http://localhost:3000).
 
 Without Firebase environment variables, the storefront still renders and reports that cart persistence is unavailable; production deployments should always configure them.
 
@@ -76,6 +82,7 @@ Without Firebase environment variables, the storefront still renders and reports
 | `npm run lint` | Run ESLint |
 | `npm run typecheck` | Run TypeScript without emitting files |
 | `npm test` | Run unit and component tests |
+| `npm run test:coverage` | Run tests and enforce coverage thresholds |
 | `npm run test:watch` | Run tests in watch mode |
 | `npm run test:e2e` | Run Playwright browser tests |
 | `npm run emulators` | Start the local Realtime Database emulator |
@@ -88,8 +95,11 @@ Without Firebase environment variables, the storefront still renders and reports
 - Use only `demo-` project IDs for the repository's emulator workflow.
 - Keep Firebase client rules default-deny and grant database access only to the server service account.
 - The cart cookie is opaque, HttpOnly, same-site and secure in production.
-- Cart payload size, origin, field types, item counts, quantities and prices are validated server-side.
+- Cart request bodies are streamed through a byte limit and checked for origin, content type and schema validity.
+- Product identity, title, price and revision are controlled by the server; clients can request only quantity mutations.
+- Production pages use request-specific CSP nonces instead of `unsafe-inline` scripts.
+- Outbound OAuth and Firebase calls have explicit timeouts.
 
 ## Current product scope
 
-Products are intentionally static demo data. The cart is anonymous and session-based; a real checkout flow should add authenticated accounts, a server-owned product catalog, inventory validation, tax/shipping calculation and payment processing.
+Products are intentionally held in a small server-owned demo catalog. The cart is anonymous and session-based; a real checkout flow should move the catalog to a durable database and add authenticated accounts, inventory validation, tax/shipping calculation and payment processing.

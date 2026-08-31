@@ -42,7 +42,9 @@ export default function AppShell(): React.ReactElement {
 					</p>
 				) : (
 					<>
-						{cartIsVisible && <Cart />}
+						<div hidden={!cartIsVisible}>
+							<Cart />
+						</div>
 						<Products />
 					</>
 				)}

@@ -62,6 +62,15 @@ const cartSlice = createSlice({
 			state.items = action.payload.items;
 			state.revision = action.payload.revision;
 		},
+		reconcileCart(
+			state: CartSliceState,
+			action: PayloadAction<PersistedCart>
+		) {
+			if (action.payload.revision < state.revision) return;
+			state.hydrated = true;
+			state.items = action.payload.items;
+			state.revision = action.payload.revision;
+		},
 		markHydrated(state: CartSliceState) {
 			state.hydrated = true;
 		},
