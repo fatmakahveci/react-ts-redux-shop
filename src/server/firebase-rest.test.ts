@@ -90,6 +90,40 @@ describe("Firebase REST client", () => {
 		).toBe("Bearer owner");
 	});
 
+	it("atomically clears a completed cart", async () => {
+		useEmulator();
+		const fetchMock = vi
+			.fn()
+			.mockResolvedValueOnce(
+				new Response(
+					JSON.stringify({
+						cart: {
+							items: [{ id: "p1", price: 6, quantity: 1, title: "My First Book" }],
+							revision: 3,
+						},
+						expiresAt: Date.now() + 60_000,
+						rateLimit: { count: 2, windowStartedAt: Date.now() },
+						updatedAt: Date.now(),
+					}),
+					{ headers: { etag: '"revision-3"' } }
+				)
+			)
+			.mockResolvedValueOnce(new Response(null, { status: 200 }));
+		vi.stubGlobal("fetch", fetchMock);
+		const { clearCart } = await import("./firebase-rest");
+
+		await expect(clearCart(sessionId)).resolves.toMatchObject({
+			cart: { items: [], revision: 4 },
+			rateLimited: false,
+		});
+		const write = fetchMock.mock.calls[1];
+		expect(new Headers(write[1]?.headers).get("If-Match")).toBe('"revision-3"');
+		expect(JSON.parse(write[1]?.body as string)).toMatchObject({
+			cart: { items: [], revision: 4 },
+			rateLimit: { count: 3 },
+		});
+	});
+
 	it("retries ETag conflicts and preserves the concurrent cart", async () => {
 		useEmulator();
 		const concurrentCart = {

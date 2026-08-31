@@ -40,6 +40,35 @@ test("adds, opens, increments and removes a cart item", async ({ page }) => {
 	await page.keyboard.press("Escape");
 	await expect(page.getByRole("dialog", { name: "Your Shopping Cart" })).toBeHidden();
 	await expect(cartButton).toHaveAttribute("aria-expanded", "false");
+
+	await cartButton.click();
+	await page.getByRole("button", { name: "Checkout securely" }).click();
+	await page.getByRole("textbox", { name: "Full name" }).fill("Ada Reader");
+	await page.getByRole("textbox", { name: "Email" }).fill("ada@example.test");
+	await page
+		.getByRole("textbox", { name: "Street address" })
+		.fill("1 Library Lane");
+	await page.getByRole("textbox", { name: "City" }).fill("London");
+	await page.getByRole("textbox", { name: "Postal code" }).fill("N1 1AA");
+	const checkoutScan = await new AxeBuilder({ page })
+		.include('[role="dialog"]')
+		.analyze();
+	expect(checkoutScan.violations).toEqual([]);
+
+	const checkoutResponse = page.waitForResponse(
+		(response) =>
+			response.url().endsWith("/api/cart") &&
+			response.request().method() === "DELETE"
+	);
+	await page.getByRole("button", { name: /Place order/i }).click();
+	await expectSuccessfulMutation(await checkoutResponse);
+	await expect(
+		page.getByRole("heading", { name: "Thank you for your order" })
+	).toBeVisible();
+	await expect(cartButton).toContainText("0");
+	await page.getByRole("button", { name: "Continue browsing" }).click();
+	await page.reload();
+	await expect(cartButton).toContainText("0");
 });
 
 test("preserves concurrent mutations from two tabs", async ({ context, page }) => {

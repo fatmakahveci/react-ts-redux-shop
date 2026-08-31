@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mutateCart, readCart } from "@/server/firebase-rest";
+import { clearCart, mutateCart, readCart } from "@/server/firebase-rest";
 import {
 	isJsonRequest,
 	isSameOriginRequest,
@@ -106,6 +106,35 @@ export async function PATCH(request: Request): Promise<NextResponse> {
 		}
 
 		logServerError("cart.mutation.failed", error, requestId);
+		return json({ message: "Cart service is unavailable." }, requestId, 503);
+	}
+}
+
+export async function DELETE(request: Request): Promise<NextResponse> {
+	const requestId = randomUUID();
+	try {
+		if (!isSameOriginRequest(request)) {
+			return json(
+				{ message: "Cross-origin request rejected." },
+				requestId,
+				403
+			);
+		}
+
+		const sessionId = await getCartSessionId();
+		const result = await clearCart(sessionId);
+		if (result.rateLimited) {
+			return json(
+				{ cart: result.cart, message: "Too many cart updates." },
+				requestId,
+				429,
+				{ "Retry-After": String(result.retryAfter ?? 60) }
+			);
+		}
+
+		return json({ cart: result.cart }, requestId);
+	} catch (error) {
+		logServerError("cart.clear.failed", error, requestId);
 		return json({ message: "Cart service is unavailable." }, requestId, 503);
 	}
 }

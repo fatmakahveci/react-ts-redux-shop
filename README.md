@@ -9,6 +9,7 @@ A full-stack shopping-cart example built with Next.js App Router, React, Redux T
 - Category filtering and price/title sorting.
 - Expandable book details with author, category and page information.
 - Keyboard-accessible cart drawer with focus management, subtotal and free-shipping progress.
+- Demo checkout with delivery details, payment choice, order confirmation and atomic server-side cart clearing.
 - Mobile and desktop accessibility coverage with Playwright and Axe.
 
 ## Architecture

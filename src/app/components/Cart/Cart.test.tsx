@@ -28,7 +28,14 @@ describe("Cart", () => {
 		expect(screen.getByText("$10.50 away from free shipping")).toBeVisible();
 		expect(screen.getByText("$24.50")).toBeVisible();
 		expect(screen.getByRole("progressbar")).toHaveAttribute("value", "24.5");
-		expect(screen.getByRole("button", { name: /checkout coming soon/i })).toBeDisabled();
+		const checkoutButton = screen.getByRole("button", {
+			name: /checkout securely/i,
+		});
+		expect(checkoutButton).toBeEnabled();
+		fireEvent.click(checkoutButton);
+		expect(
+			screen.getByRole("heading", { name: "Delivery details" })
+		).toBeVisible();
 	});
 
 	it("offers a catalog link when empty", () => {

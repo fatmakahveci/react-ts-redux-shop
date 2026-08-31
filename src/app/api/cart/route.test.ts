@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mutateCartMock, readCartMock } = vi.hoisted(() => ({
+const { clearCartMock, mutateCartMock, readCartMock } = vi.hoisted(() => ({
+	clearCartMock: vi.fn(),
 	mutateCartMock: vi.fn(),
 	readCartMock: vi.fn(),
 }));
 
 vi.mock("@/server/firebase-rest", () => ({
+	clearCart: clearCartMock,
 	mutateCart: mutateCartMock,
 	readCart: readCartMock,
 }));
@@ -17,7 +19,7 @@ vi.mock("next/headers", () => ({
 	})),
 }));
 
-import { GET, PATCH } from "./route";
+import { DELETE, GET, PATCH } from "./route";
 
 function mutationRequest(body: string, headers?: HeadersInit): Request {
 	return new Request("http://shop.test/api/cart", {
@@ -33,8 +35,31 @@ function mutationRequest(body: string, headers?: HeadersInit): Request {
 
 describe("cart API", () => {
 	beforeEach(() => {
+		clearCartMock.mockReset();
 		mutateCartMock.mockReset();
 		readCartMock.mockReset();
+	});
+
+	it("clears the cart after checkout", async () => {
+		clearCartMock.mockResolvedValue({
+			cart: { items: [], revision: 4 },
+			rateLimited: false,
+		});
+
+		const response = await DELETE(
+			new Request("http://shop.test/api/cart", {
+				headers: { origin: "http://shop.test" },
+				method: "DELETE",
+			})
+		);
+
+		expect(response.status).toBe(200);
+		expect(await response.json()).toEqual({
+			cart: { items: [], revision: 4 },
+		});
+		expect(clearCartMock).toHaveBeenCalledWith(
+			"b16b00b5-1234-4123-8123-123456789abc"
+		);
 	});
 
 	it("returns the current cart", async () => {

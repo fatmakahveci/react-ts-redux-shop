@@ -349,6 +349,70 @@ export async function mutateCart(
 	throw new Error("Firebase cart remained contested after several retries.");
 }
 
+export async function clearCart(
+	sessionId: string
+): Promise<CartMutationResult> {
+	for (let attempt = 0; attempt < 8; attempt++) {
+		const now = Date.now();
+		const currentResponse = await firebaseRequest(cartPath(sessionId), {
+			cache: "no-store",
+			headers: { "X-Firebase-ETag": "true" },
+		});
+		if (!currentResponse.ok) throw new Error("Unable to read Firebase cart.");
+
+		const etag = currentResponse.headers.get("etag");
+		if (!etag) throw new Error("Firebase did not provide an ETag.");
+		const stored = await parseStoredCart(await currentResponse.json(), now);
+		const withinWindow =
+			now - stored.rateLimit.windowStartedAt < RATE_LIMIT_WINDOW_MS;
+		const count = withinWindow ? stored.rateLimit.count : 0;
+		const windowStartedAt = withinWindow
+			? stored.rateLimit.windowStartedAt
+			: now;
+
+		if (count >= MUTATION_LIMIT) {
+			return {
+				cart: stored.cart,
+				rateLimited: true,
+				retryAfter: Math.max(
+					1,
+					Math.ceil(
+						(windowStartedAt + RATE_LIMIT_WINDOW_MS - now) / 1_000
+					)
+				),
+			};
+		}
+		if (stored.cart.revision >= MAX_CART_REVISION) {
+			throw new Error("Cart revision limit reached.");
+		}
+
+		const cart: PersistedCart = {
+			items: [],
+			revision: stored.cart.revision + 1,
+		};
+		const nextStored: StoredCart = {
+			cart,
+			expiresAt: now + CART_TTL_MS,
+			rateLimit: { count: count + 1, windowStartedAt },
+			updatedAt: now,
+		};
+		const writeResponse = await firebaseRequest(cartPath(sessionId), {
+			body: JSON.stringify(nextStored),
+			headers: {
+				"Content-Type": "application/json",
+				"If-Match": etag,
+			},
+			method: "PUT",
+		});
+		if (writeResponse.status === 412) continue;
+		if (!writeResponse.ok) throw new Error("Unable to clear Firebase cart.");
+
+		return { cart, rateLimited: false };
+	}
+
+	throw new Error("Firebase cart remained contested after several retries.");
+}
+
 export async function deleteExpiredCarts(
 	now = Date.now(),
 	limit = 100

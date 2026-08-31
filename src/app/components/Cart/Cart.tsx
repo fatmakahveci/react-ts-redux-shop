@@ -4,12 +4,18 @@ import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { uiActions } from "@/app/store/ui-slice";
 import { formatCurrency } from "@/shared/format";
 import type { CartItem as CartItemType } from "@/shared/types";
+import { useState } from "react";
+import Checkout from "./Checkout";
 import styles from "./Cart.module.css";
 
 const FREE_SHIPPING_THRESHOLD = 35;
 
 const Cart = (): React.ReactElement => {
 	const dispatch = useAppDispatch();
+	const [checkoutSummary, setCheckoutSummary] = useState<{
+		itemCount: number;
+		subtotal: number;
+	} | null>(null);
 	const cartItems = useAppSelector((state) => state.cart.items);
 	const itemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 	const subtotal = cartItems.reduce(
@@ -17,6 +23,15 @@ const Cart = (): React.ReactElement => {
 		0
 	);
 	const shippingRemaining = Math.max(FREE_SHIPPING_THRESHOLD - subtotal, 0);
+	if (checkoutSummary) {
+		return (
+			<Checkout
+				itemCount={checkoutSummary.itemCount}
+				onBack={() => setCheckoutSummary(null)}
+				subtotal={checkoutSummary.subtotal}
+			/>
+		);
+	}
 
 	return (
 		<Card className={styles.cart}>
@@ -63,8 +78,11 @@ const Cart = (): React.ReactElement => {
 								<strong>{formatCurrency(subtotal)}</strong>
 							</div>
 							<p>Taxes and shipping are calculated at checkout.</p>
-							<button disabled type="button">
-								Checkout coming soon
+							<button
+								onClick={() => setCheckoutSummary({ itemCount, subtotal })}
+								type="button"
+							>
+								Checkout securely
 							</button>
 						</footer>
 					</>
