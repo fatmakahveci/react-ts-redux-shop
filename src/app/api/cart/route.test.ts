@@ -67,6 +67,22 @@ describe("cart API", () => {
 		);
 	});
 
+	it("uses the public Host header when the framework URL is internal", async () => {
+		mutateCartMock.mockResolvedValue({
+			cart: { items: [], revision: 1 },
+			rateLimited: false,
+		});
+
+		const response = await PATCH(
+			mutationRequest(JSON.stringify({ delta: 1, productId: "p1" }), {
+				host: "127.0.0.1:3000",
+				origin: "http://127.0.0.1:3000",
+			})
+		);
+
+		expect(response.status).toBe(200);
+	});
+
 	it("returns a retry hint when the session rate limit is reached", async () => {
 		mutateCartMock.mockResolvedValue({
 			cart: { items: [], revision: 60 },

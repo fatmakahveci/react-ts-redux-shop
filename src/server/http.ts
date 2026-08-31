@@ -10,7 +10,8 @@ export function isSameOriginRequest(request: Request): boolean {
 	if (!origin) return true;
 
 	try {
-		return new URL(origin).host === new URL(request.url).host;
+		const requestHost = request.headers.get("host") ?? new URL(request.url).host;
+		return new URL(origin).host === requestHost;
 	} catch {
 		return false;
 	}

@@ -1,11 +1,26 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect, type Page, type Response, test } from "@playwright/test";
+
+function waitForCartMutation(page: Page): Promise<Response> {
+	return page.waitForResponse(
+		(response) =>
+			response.url().endsWith("/api/cart") &&
+			response.request().method() === "PATCH"
+	);
+}
+
+async function expectSuccessfulMutation(response: Response): Promise<void> {
+	const responseBody = await response.text();
+	expect(response.status(), responseBody).toBe(200);
+}
 
 test("adds, opens, increments and removes a cart item", async ({ page }) => {
 	await page.goto("/");
 	await expect(page.getByRole("heading", { name: /favorite products/i })).toBeVisible();
 
+	const addResponse = waitForCartMutation(page);
 	await page.getByRole("button", { name: "Add to Cart" }).first().click();
+	await expectSuccessfulMutation(await addResponse);
 	const cartButton = page.getByRole("button", { name: /My Cart/i });
 	await expect(cartButton).toContainText("1");
 	await expect(page.getByRole("status")).toContainText(
@@ -41,9 +56,15 @@ test("preserves concurrent mutations from two tabs", async ({ context, page }) =
 	const secondBook = secondPage
 		.getByRole("listitem")
 		.filter({ hasText: "My Second Book" });
+	const firstResponse = waitForCartMutation(page);
+	const secondResponse = waitForCartMutation(secondPage);
 	await Promise.all([
 		firstBook.getByRole("button", { name: "Add to Cart" }).click(),
 		secondBook.getByRole("button", { name: "Add to Cart" }).click(),
+	]);
+	await Promise.all([
+		expectSuccessfulMutation(await firstResponse),
+		expectSuccessfulMutation(await secondResponse),
 	]);
 	await Promise.all([
 		expect(page.getByRole("status")).toContainText(
