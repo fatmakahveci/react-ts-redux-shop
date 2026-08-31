@@ -6,7 +6,7 @@
 
 .hero {
 	margin: 0 auto 2.5rem;
-	max-width: 48rem;
+	max-width: 70rem;
 	text-align: center;
 }
 
@@ -20,12 +20,42 @@
 	margin: 0.5rem 0 1.25rem;
 }
 
-.hero > p:last-child {
+.lead {
 	color: #5d665f;
 	font-size: 1.05rem;
 	line-height: 1.7;
 	margin: 0 auto;
 	max-width: 38rem;
+}
+
+.benefits {
+	display: grid;
+	gap: 0.7rem;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	list-style: none;
+	margin: 2.5rem 0 0;
+	padding: 0;
+	text-align: left;
+}
+
+.benefits li {
+	background: rgb(255 253 247 / 74%);
+	border: 1px solid #dedbd0;
+	border-radius: 0.9rem;
+	display: grid;
+	gap: 0.3rem;
+	padding: 0.9rem 1rem;
+}
+
+.benefits strong {
+	color: #26352d;
+	font-size: 0.82rem;
+}
+
+.benefits span {
+	color: #657068;
+	font-size: 0.75rem;
+	line-height: 1.4;
 }
 
 .eyebrow {
@@ -45,8 +75,34 @@
 	box-shadow: 0 1rem 2.5rem rgb(42 53 45 / 7%);
 	display: grid;
 	gap: 1rem;
-	grid-template-columns: minmax(14rem, 1fr) repeat(2, minmax(10rem, 0.42fr));
+	grid-template-columns: minmax(14rem, 1fr) minmax(10rem, 0.36fr);
 	padding: 1rem;
+}
+
+.categories {
+	display: flex;
+	gap: 0.55rem;
+	margin-top: 1rem;
+	overflow-x: auto;
+	padding: 0.1rem 0 0.4rem;
+	scrollbar-width: thin;
+}
+
+.categories button {
+	background: transparent;
+	border-color: #b9c0ba;
+	border-radius: 999px;
+	color: #425047;
+	font-size: 0.82rem;
+	font-weight: 700;
+	padding: 0.55rem 1rem;
+	white-space: nowrap;
+}
+
+.categories button[aria-pressed="true"] {
+	background: #17211c;
+	border-color: #17211c;
+	color: #fff;
 }
 
 .controls label {
@@ -126,14 +182,6 @@
 }
 
 @media (max-width: 58rem) {
-	.controls {
-		grid-template-columns: 1fr 1fr;
-	}
-
-	.search {
-		grid-column: 1 / -1;
-	}
-
 	.grid {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
@@ -144,12 +192,13 @@
 		padding-inline: 0.85rem;
 	}
 
+	.benefits,
 	.controls,
 	.grid {
 		grid-template-columns: 1fr;
 	}
 
-	.search {
-		grid-column: auto;
+	.benefits {
+		margin-top: 1.5rem;
 	}
 }

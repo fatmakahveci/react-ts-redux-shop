@@ -46,10 +46,24 @@ const Products = (): React.ReactElement => {
 			<header className={styles.hero}>
 				<p className={styles.eyebrow}>Independent stories, thoughtfully chosen</p>
 				<h2>Find your next favorite book</h2>
-				<p>
+				<p className={styles.lead}>
 					A small shelf of beautiful reads for slow mornings, long journeys,
 					and curious minds.
 				</p>
+				<ul aria-label="Store benefits" className={styles.benefits}>
+					<li>
+						<strong>Curated in small batches</strong>
+						<span>Six thoughtful reads, no endless scrolling</span>
+					</li>
+					<li>
+						<strong>Free shipping over $35</strong>
+						<span>Build a shelf and we’ll cover delivery</span>
+					</li>
+					<li>
+						<strong>Your cart, safely saved</strong>
+						<span>Pick up where you left off</span>
+					</li>
+				</ul>
 			</header>
 
 			<div aria-label="Catalog controls" className={styles.controls}>
@@ -63,21 +77,6 @@ const Products = (): React.ReactElement => {
 					/>
 				</label>
 				<label>
-					<span>Category</span>
-					<select
-						onChange={(event) =>
-							setCategory(event.target.value as CategoryFilter)
-						}
-						value={category}
-					>
-						{CATEGORIES.map((option) => (
-							<option key={option} value={option}>
-								{option}
-							</option>
-						))}
-					</select>
-				</label>
-				<label>
 					<span>Sort by</span>
 					<select
 						onChange={(event) => setSort(event.target.value as SortOption)}
@@ -89,6 +88,22 @@ const Products = (): React.ReactElement => {
 						<option value="title">Title: A–Z</option>
 					</select>
 				</label>
+			</div>
+			<div
+				aria-label="Filter by category"
+				className={styles.categories}
+				role="group"
+			>
+				{CATEGORIES.map((option) => (
+					<button
+						aria-pressed={category === option}
+						key={option}
+						onClick={() => setCategory(option)}
+						type="button"
+					>
+						{option === "All" ? "All books" : option}
+					</button>
+				))}
 			</div>
 
 			<p aria-live="polite" className={styles.resultCount}>
@@ -110,7 +125,7 @@ const Products = (): React.ReactElement => {
 					</button>
 				</div>
 			) : (
-				<ul className={styles.grid}>
+				<ul aria-label="Books" className={styles.grid}>
 					{visibleProducts.map((product: CatalogProduct) => (
 						<ProductItem key={product.id} {...product} />
 					))}

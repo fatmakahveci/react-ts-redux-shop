@@ -1,6 +1,6 @@
 import { makeStore } from "@/app/store";
 import { cartActions } from "@/app/store/cart-slice";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { describe, expect, it } from "vitest";
 import Cart from "./Cart";
@@ -32,8 +32,10 @@ describe("Cart", () => {
 	});
 
 	it("offers a catalog link when empty", () => {
+		const store = makeStore();
+		store.dispatch({ type: "ui/toggle" });
 		render(
-			<Provider store={makeStore()}>
+			<Provider store={store}>
 				<Cart />
 			</Provider>
 		);
@@ -43,5 +45,7 @@ describe("Cart", () => {
 			"href",
 			"#catalog"
 		);
+		fireEvent.click(screen.getByRole("link", { name: "Browse the shelf" }));
+		expect(store.getState().ui.cartIsVisible).toBe(false);
 	});
 });

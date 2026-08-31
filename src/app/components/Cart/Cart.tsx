@@ -1,6 +1,7 @@
 import CartItem from "@/app/components/Cart/CartItem";
 import Card from "@/app/components/UI/Card";
-import { useAppSelector } from "@/app/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
+import { uiActions } from "@/app/store/ui-slice";
 import { formatCurrency } from "@/shared/format";
 import type { CartItem as CartItemType } from "@/shared/types";
 import styles from "./Cart.module.css";
@@ -8,6 +9,7 @@ import styles from "./Cart.module.css";
 const FREE_SHIPPING_THRESHOLD = 35;
 
 const Cart = (): React.ReactElement => {
+	const dispatch = useAppDispatch();
 	const cartItems = useAppSelector((state) => state.cart.items);
 	const itemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 	const subtotal = cartItems.reduce(
@@ -29,7 +31,12 @@ const Cart = (): React.ReactElement => {
 				{cartItems.length === 0 ? (
 					<div className={styles.empty}>
 						<p>Your cart is ready for a good story.</p>
-						<a href="#catalog">Browse the shelf</a>
+						<a
+							href="#catalog"
+							onClick={() => dispatch(uiActions.closeCart())}
+						>
+							Browse the shelf
+						</a>
 					</div>
 				) : (
 					<>

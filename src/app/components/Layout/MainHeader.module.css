@@ -1,3 +1,19 @@
+.promo {
+	align-items: center;
+	background: #17211c;
+	color: #e8ebe8;
+	display: flex;
+	font-size: 0.68rem;
+	font-weight: 700;
+	gap: 0.65rem;
+	justify-content: center;
+	letter-spacing: 0.08em;
+	min-height: 1.9rem;
+	padding: 0.35rem 1rem;
+	text-align: center;
+	text-transform: uppercase;
+}
+
 .header {
 	align-items: center;
 	backdrop-filter: blur(1rem);
@@ -38,7 +54,29 @@
 }
 
 .header ul {
+	align-items: center;
+	display: flex;
+	gap: 1.25rem;
 	list-style: none;
 	margin: 0;
 	padding: 0;
+}
+
+.catalogLink a {
+	color: #425047;
+	font-size: 0.85rem;
+	font-weight: 700;
+	text-decoration: none;
+}
+
+.catalogLink a:hover {
+	color: #9a4c2d;
+}
+
+@media (max-width: 34rem) {
+	.promo span:last-child,
+	.promo span[aria-hidden="true"],
+	.catalogLink {
+		display: none;
+	}
 }

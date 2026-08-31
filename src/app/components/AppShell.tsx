@@ -1,6 +1,6 @@
 "use client";
 
-import Cart from "@/app/components/Cart/Cart";
+import CartDrawer from "@/app/components/Cart/CartDrawer";
 import Layout from "@/app/components/Layout/Layout";
 import Products from "@/app/components/Shop/Products";
 import Notification from "@/app/components/UI/Notification";
@@ -42,9 +42,7 @@ export default function AppShell(): React.ReactElement {
 					</p>
 				) : (
 					<>
-						<div hidden={!cartIsVisible}>
-							<Cart />
-						</div>
+						{cartIsVisible && <CartDrawer />}
 						<Products />
 					</>
 				)}

@@ -1,11 +1,11 @@
 .cart {
 	background: #17211c;
-	border-radius: 0 0 1.2rem 1.2rem;
+	border-radius: 0;
 	color: #fff;
-	margin: 0 auto 1rem;
-	max-width: 72rem;
+	margin: 0;
+	max-width: none;
 	padding: clamp(1rem, 3vw, 2rem);
-	width: calc(100% - 2rem);
+	width: 100%;
 }
 
 .header {

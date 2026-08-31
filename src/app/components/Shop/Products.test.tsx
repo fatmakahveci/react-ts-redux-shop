@@ -30,14 +30,14 @@ describe("Products", () => {
 	it("filters by category and sorts by descending price", () => {
 		renderProducts();
 
-		fireEvent.change(screen.getByRole("combobox", { name: "Category" }), {
-			target: { value: "Travel" },
-		});
+		fireEvent.click(screen.getByRole("button", { name: "Travel" }));
 		fireEvent.change(screen.getByRole("combobox", { name: "Sort by" }), {
 			target: { value: "price-desc" },
 		});
 
-		const products = screen.getAllByRole("listitem");
+		const products = within(
+			screen.getByRole("list", { name: "Books" })
+		).getAllByRole("listitem");
 		expect(products).toHaveLength(2);
 		expect(within(products[0]).getByText("Cities of Clay")).toBeVisible();
 		expect(within(products[1]).getByText("My Second Book")).toBeVisible();

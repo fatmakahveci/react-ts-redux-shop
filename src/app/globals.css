@@ -18,6 +18,10 @@ body {
 	margin: 0;
 }
 
+body.cart-drawer-open {
+	overflow: hidden;
+}
+
 button {
 	background-color: transparent;
 	border: 1px solid #246c53;

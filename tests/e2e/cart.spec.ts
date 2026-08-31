@@ -37,6 +37,9 @@ test("adds, opens, increments and removes a cart item", async ({ page }) => {
 
 	await page.getByRole("button", { name: /Remove one My First Book/i }).click();
 	await expect(cartButton).toContainText("1");
+	await page.keyboard.press("Escape");
+	await expect(page.getByRole("dialog", { name: "Your Shopping Cart" })).toBeHidden();
+	await expect(cartButton).toHaveAttribute("aria-expanded", "false");
 });
 
 test("preserves concurrent mutations from two tabs", async ({ context, page }) => {
@@ -88,6 +91,12 @@ test("has no automatically detectable accessibility violations", async ({ page }
 
 	const accessibilityScan = await new AxeBuilder({ page }).analyze();
 	expect(accessibilityScan.violations).toEqual([]);
+
+	await page.getByRole("button", { name: /My Cart/i }).click();
+	const drawerScan = await new AxeBuilder({ page })
+		.include('[role="dialog"]')
+		.analyze();
+	expect(drawerScan.violations).toEqual([]);
 	const csp = response?.headers()["content-security-policy"];
 	expect(csp).toContain("'nonce-");
 	expect(csp).not.toContain("script-src 'self' 'unsafe-inline'");
@@ -107,7 +116,7 @@ test("searches, filters and reveals book details", async ({ page }) => {
 	).toBeVisible();
 
 	await page.getByRole("searchbox", { name: "Search books" }).fill("");
-	await page.getByRole("combobox", { name: "Category" }).selectOption("Cooking");
+	await page.getByRole("button", { name: "Cooking" }).click();
 	await expect(page.getByText("1 book", { exact: true })).toBeVisible();
 	await expect(
 		page.getByRole("heading", { name: "A Table for Seasons" })
