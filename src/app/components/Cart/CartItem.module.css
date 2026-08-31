@@ -1,71 +1,98 @@
 .item {
-	margin: 1rem 0;
-	background-color: #575757;
-	padding: 1rem;
+	align-items: center;
+	background: #243129;
+	border: 1px solid #39473e;
+	border-radius: 0.85rem;
+	display: grid;
+	gap: 1rem;
+	grid-template-columns: 4.5rem 1fr;
+	padding: 0.75rem;
+}
+
+.cover {
+	aspect-ratio: 1;
+	background-image: url("/images/book-cover-atlas.webp");
+	background-repeat: no-repeat;
+	background-size: 300% 200%;
+	border-radius: 0.55rem;
+}
+
+.cover0 { background-position: 0 0; }
+.cover1 { background-position: 50% 0; }
+.cover2 { background-position: 100% 0; }
+.cover3 { background-position: 0 100%; }
+.cover4 { background-position: 50% 100%; }
+.cover5 { background-position: 100% 100%; }
+
+.content {
+	min-width: 0;
+}
+
+.item header,
+.details {
+	align-items: center;
+	display: flex;
+	gap: 1rem;
+	justify-content: space-between;
 }
 
 .item h3 {
-	margin: 0 0 0.5rem;
-	font-size: 1.5rem;
+	font-family: Georgia, "Times New Roman", serif;
+	font-size: 1.15rem;
+	font-weight: 500;
+	margin: 0;
 }
 
-.item header {
-	display: flex;
-	justify-content: space-between;
-	align-items: baseline;
-	gap: 1rem;
-}
-
-.details {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-}
-
-.quantity span {
-	font-size: 1.5rem;
-	font-weight: bold;
+.item header p {
+	color: #9eaaa2;
+	font-size: 0.72rem;
+	margin: 0.25rem 0 0;
 }
 
 .price {
-	font-size: 1.35rem;
-	font-weight: bold;
-	text-align: right;
+	font-weight: 750;
+	white-space: nowrap;
 }
 
-.itemPrice {
-	font-weight: normal;
-	font-size: 1rem;
-	font-style: italic;
+.details {
+	margin-top: 0.65rem;
+}
+
+.quantity {
+	color: #c1cbc4;
+	font-size: 0.82rem;
 }
 
 .actions {
 	display: flex;
-	justify-content: flex-end;
-	margin: 0.5rem 0;
+	gap: 0.4rem;
 }
 
 .actions button {
-	background-color: transparent;
-	border: 1px solid white;
-	margin-left: 0.5rem;
-	padding: 0.15rem 1rem;
-	color: white;
+	align-items: center;
+	border-color: #657269;
+	border-radius: 50%;
+	color: #fff;
+	display: inline-flex;
+	height: 2rem;
+	justify-content: center;
+	padding: 0;
+	width: 2rem;
 }
 
 .actions button:hover,
 .actions button:active {
-	background-color: #4b4b4b;
-	color: white;
+	background: #3c4c42;
 }
 
 @media (max-width: 32rem) {
+	.item {
+		grid-template-columns: 3.5rem 1fr;
+	}
+
 	.item header {
 		align-items: flex-start;
 		flex-direction: column;
-	}
-
-	.price {
-		text-align: left;
+		gap: 0.35rem;
 	}
 }

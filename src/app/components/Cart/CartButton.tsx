@@ -20,7 +20,7 @@ const CartButton = (): React.ReactElement => {
 			onClick={toggleCartHandler}
 			type="button"
 		>
-			<span>My Cart</span>
+			<span>My cart</span>
 			<span aria-label={`${cartQuantity} items`} className={styles.badge}>
 				{cartQuantity}
 			</span>

@@ -4,7 +4,10 @@ import styles from "./MainHeader.module.css";
 const MainHeader = (): React.ReactElement => {
 	return (
 		<header className={styles.header}>
-			<h1>ReduxCart</h1>
+			<a className={styles.brand} href="#catalog">
+				<h1>ReduxCart</h1>
+				<small>Independent books</small>
+			</a>
 			<nav aria-label="Shopping cart">
 				<ul>
 					<li>

@@ -16,7 +16,7 @@ describe("AppShell", () => {
 		);
 
 		expect(
-			await screen.findByRole("heading", { name: /favorite products/i })
+			await screen.findByRole("heading", { name: /favorite book/i })
 		).toBeVisible();
 		expect(screen.getByRole("alert")).toHaveTextContent(
 			"Fetching cart data failed!"

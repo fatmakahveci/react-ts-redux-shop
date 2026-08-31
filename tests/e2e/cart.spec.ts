@@ -16,7 +16,7 @@ async function expectSuccessfulMutation(response: Response): Promise<void> {
 
 test("adds, opens, increments and removes a cart item", async ({ page }) => {
 	await page.goto("/");
-	await expect(page.getByRole("heading", { name: /favorite products/i })).toBeVisible();
+	await expect(page.getByRole("heading", { name: /favorite book/i })).toBeVisible();
 
 	const addResponse = waitForCartMutation(page);
 	await page.getByRole("button", { name: "Add to Cart" }).first().click();
@@ -44,9 +44,9 @@ test("preserves concurrent mutations from two tabs", async ({ context, page }) =
 	await page.goto("/");
 	await secondPage.goto("/");
 	await Promise.all([
-		expect(page.getByRole("heading", { name: /favorite products/i })).toBeVisible(),
+		expect(page.getByRole("heading", { name: /favorite book/i })).toBeVisible(),
 		expect(
-			secondPage.getByRole("heading", { name: /favorite products/i })
+			secondPage.getByRole("heading", { name: /favorite book/i })
 		).toBeVisible(),
 	]);
 
@@ -84,11 +84,32 @@ test("preserves concurrent mutations from two tabs", async ({ context, page }) =
 
 test("has no automatically detectable accessibility violations", async ({ page }) => {
 	const response = await page.goto("/");
-	await expect(page.getByRole("heading", { name: /favorite products/i })).toBeVisible();
+	await expect(page.getByRole("heading", { name: /favorite book/i })).toBeVisible();
 
 	const accessibilityScan = await new AxeBuilder({ page }).analyze();
 	expect(accessibilityScan.violations).toEqual([]);
 	const csp = response?.headers()["content-security-policy"];
 	expect(csp).toContain("'nonce-");
 	expect(csp).not.toContain("script-src 'self' 'unsafe-inline'");
+});
+
+test("searches, filters and reveals book details", async ({ page }) => {
+	await page.goto("/");
+	await page.getByRole("searchbox", { name: "Search books" }).fill("stars");
+	await expect(page.getByText("1 book", { exact: true })).toBeVisible();
+	await expect(
+		page.getByRole("heading", { name: "Atlas of Quiet Stars" })
+	).toBeVisible();
+
+	await page.getByText("Book details").click();
+	await expect(
+		page.getByText(/responsibly sourced paper/i)
+	).toBeVisible();
+
+	await page.getByRole("searchbox", { name: "Search books" }).fill("");
+	await page.getByRole("combobox", { name: "Category" }).selectOption("Cooking");
+	await expect(page.getByText("1 book", { exact: true })).toBeVisible();
+	await expect(
+		page.getByRole("heading", { name: "A Table for Seasons" })
+	).toBeVisible();
 });

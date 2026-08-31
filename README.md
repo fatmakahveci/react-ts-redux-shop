@@ -2,6 +2,15 @@
 
 A full-stack shopping-cart example built with Next.js App Router, React, Redux Toolkit, TypeScript, Firebase Realtime Database and Yup.
 
+## Storefront features
+
+- Responsive six-book catalog with original local cover artwork.
+- Search across titles, authors and descriptions.
+- Category filtering and price/title sorting.
+- Expandable book details with author, category and page information.
+- Optimistic cart controls with subtotal and free-shipping progress.
+- Mobile and desktop accessibility coverage with Playwright and Axe.
+
 ## Architecture
 
 - Server Components own the root layout and metadata.

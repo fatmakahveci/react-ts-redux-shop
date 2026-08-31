@@ -1,35 +1,152 @@
-.item h3 {
-	margin: 0.5rem 0;
-	font-size: 1.25rem;
+.item {
+	min-width: 0;
+}
+
+.card {
+	background: #fffdf7;
+	border: 1px solid #dedbd0;
+	border-radius: 1rem;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	margin: 0;
+	overflow: hidden;
+	padding: 0;
+	transition: box-shadow 180ms ease, transform 180ms ease;
+	width: 100%;
+}
+
+.card:hover {
+	box-shadow: 0 1.25rem 2.6rem rgb(42 53 45 / 14%);
+	transform: translateY(-0.2rem);
+}
+
+.cover {
+	aspect-ratio: 1 / 0.82;
+	background-image: url("/images/book-cover-atlas.webp");
+	background-repeat: no-repeat;
+	background-size: 300% 200%;
+	border-bottom: 1px solid #dedbd0;
+	width: 100%;
+}
+
+.cover0 {
+	background-position: 0 0;
+}
+
+.cover1 {
+	background-position: 50% 0;
+}
+
+.cover2 {
+	background-position: 100% 0;
+}
+
+.cover3 {
+	background-position: 0 100%;
+}
+
+.cover4 {
+	background-position: 50% 100%;
+}
+
+.cover5 {
+	background-position: 100% 100%;
+}
+
+.content {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	padding: 1.15rem 1.15rem 0;
+}
+
+.meta {
+	color: #59635c;
+	display: flex;
+	font-size: 0.72rem;
+	font-weight: 700;
+	justify-content: space-between;
+	letter-spacing: 0.07em;
+	text-transform: uppercase;
 }
 
 .item header {
+	align-items: flex-start;
 	display: flex;
+	gap: 0.75rem;
 	justify-content: space-between;
-	align-items: baseline;
-	gap: 1rem;
+	margin-top: 0.8rem;
+}
+
+.item h3 {
+	color: #17211c;
+	font-family: Georgia, "Times New Roman", serif;
+	font-size: 1.45rem;
+	font-weight: 500;
+	line-height: 1.12;
+	margin: 0;
+}
+
+.author {
+	color: #59635c;
+	font-size: 0.85rem;
+	margin: 0.3rem 0 0;
 }
 
 .price {
-	border-radius: 30px;
-	padding: 0.15rem 1.5rem;
-	background-color: #3a3a3a;
-	color: white;
-	font-size: 1.5rem;
+	color: #9a4c2d;
+	font-size: 1rem;
+	font-weight: 800;
 	white-space: nowrap;
 }
 
-.item p {
-	color: #3a3a3a;
+.description {
+	color: #4d574f;
+	font-size: 0.92rem;
+	line-height: 1.55;
+	margin: 1rem 0;
+}
+
+.details {
+	border-top: 1px solid #e5e2da;
+	color: #5d665f;
+	font-size: 0.82rem;
+	margin-top: auto;
+	padding: 0.7rem 0 0;
+}
+
+.details summary {
+	color: #246c53;
+	cursor: pointer;
+	font-weight: 750;
+}
+
+.details p {
+	line-height: 1.5;
 }
 
 .actions {
-	display: flex;
-	justify-content: flex-end;
+	padding: 1rem 1.15rem 1.15rem;
 }
 
 .actions button {
-	background-color: transparent;
-	border-color: #087c6c;
-	color: #087c6c;
+	background: #1e5d48;
+	border-color: #1e5d48;
+	border-radius: 999px;
+	color: #fff;
+	font-weight: 750;
+	width: 100%;
+}
+
+.actions button:hover,
+.actions button:active {
+	background: #143f31;
+	border-color: #143f31;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.card {
+		transition: none;
+	}
 }

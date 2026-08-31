@@ -1,18 +1,40 @@
 .header {
-	width: 100%;
-	min-height: 5rem;
-	padding: 1rem 10%;
-	display: flex;
 	align-items: center;
-	justify-content: space-between;
+	backdrop-filter: blur(1rem);
+	background: rgb(242 240 232 / 88%);
+	border-bottom: 1px solid #d7d5cb;
+	display: flex;
 	gap: 1rem;
-	background-color: #252424;
+	justify-content: space-between;
+	min-height: 5rem;
+	padding: 0.8rem max(1rem, calc((100% - 72rem) / 2));
+	position: sticky;
+	top: 0;
+	z-index: 20;
 }
 
-.header h1 {
-	color: white;
-	font-size: clamp(1.4rem, 4vw, 2rem);
+.brand {
+	color: #17211c;
+	display: grid;
+	text-decoration: none;
+}
+
+.brand h1 {
+	font-family: Georgia, "Times New Roman", serif;
+	font-size: clamp(1.45rem, 4vw, 1.9rem);
+	font-weight: 500;
+	letter-spacing: -0.03em;
+	line-height: 1;
 	margin: 0;
+}
+
+.brand small {
+	color: #59635c;
+	font-size: 0.66rem;
+	font-weight: 750;
+	letter-spacing: 0.13em;
+	margin-top: 0.25rem;
+	text-transform: uppercase;
 }
 
 .header ul {

@@ -43,6 +43,15 @@ export type Product = {
 	title: string;
 };
 
+export type ProductCategory = "Cooking" | "Fiction" | "Nature" | "Travel";
+
+export type CatalogProduct = Product & {
+	author: string;
+	category: ProductCategory;
+	coverIndex: 0 | 1 | 2 | 3 | 4 | 5;
+	pages: number;
+};
+
 export type UiSliceState = {
 	cartIsVisible: boolean;
 	notification: NotificationProps | null;

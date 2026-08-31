@@ -4,8 +4,9 @@ import "./globals.css";
 import Providers from "./providers";
 
 export const metadata: Metadata = {
-	description: "A secure, session-based shopping cart built with Next.js and Redux.",
-	title: "ReduxCart",
+	description:
+		"Discover thoughtfully selected independent books and keep your reading list in a secure, session-based cart.",
+	title: "ReduxCart | Independent Books",
 };
 
 export default function RootLayout({
