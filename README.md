@@ -11,6 +11,7 @@ A full-stack shopping-cart example built with Next.js App Router, React, Redux T
 - Each anonymous visitor receives a 30-day, HttpOnly cart-session cookie and a separate database record.
 - Runtime schemas validate both incoming requests and stored Firebase data.
 - The client sends only product IDs and `+1/-1` mutations; the server owns prices, titles and revisions.
+- Each browser store sends mutations sequentially and restores the authoritative cart after a failed optimistic update.
 - Firebase ETag transactions serialize mutations, preserving concurrent changes from multiple tabs.
 - Cart records carry expiry and persistent rate-limit metadata; an authenticated cleanup endpoint removes expired records.
 
@@ -99,6 +100,7 @@ Without Firebase environment variables, the storefront still renders and reports
 - Product identity, title, price and revision are controlled by the server; clients can request only quantity mutations.
 - Production pages use request-specific CSP nonces instead of `unsafe-inline` scripts.
 - Outbound OAuth and Firebase calls have explicit timeouts.
+- Browser cart requests also have explicit timeouts and failure reconciliation.
 
 ## Current product scope
 

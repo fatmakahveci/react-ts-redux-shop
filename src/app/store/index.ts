@@ -18,6 +18,7 @@ export type RootState = ReturnType<typeof rootReducer>;
 
 export function makeStore() {
 	const cartListener = createListenerMiddleware();
+	let mutationQueue: Promise<void> = Promise.resolve();
 
 	cartListener.startListening({
 		matcher: isAnyOf(
@@ -43,7 +44,11 @@ export function makeStore() {
 				return;
 			}
 			const dispatch = listenerApi.dispatch as AppDispatch;
-			await dispatch(sendCartMutation(mutation));
+			const persistMutation = async () => {
+				await dispatch(sendCartMutation(mutation));
+			};
+			mutationQueue = mutationQueue.then(persistMutation, persistMutation);
+			await mutationQueue;
 		},
 	});
 

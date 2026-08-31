@@ -9,16 +9,13 @@ describe("cart synchronization", () => {
 	afterEach(() => vi.unstubAllGlobals());
 
 	it("sends server-owned atomic mutations for every local change", async () => {
+		let resolveFirstRequest!: (response: Response) => void;
+		const firstRequest = new Promise<Response>((resolve) => {
+			resolveFirstRequest = resolve;
+		});
 		const fetchMock = vi
 			.fn()
-			.mockResolvedValueOnce(
-				new Response(
-					JSON.stringify({
-						cart: { items: [{ ...product, quantity: 1 }], revision: 1 },
-					}),
-					{ headers: { "Content-Type": "application/json" }, status: 200 }
-				)
-			)
+			.mockReturnValueOnce(firstRequest)
 			.mockResolvedValueOnce(
 				new Response(
 					JSON.stringify({
@@ -33,6 +30,15 @@ describe("cart synchronization", () => {
 
 		store.dispatch(cartActions.addItemToCart(product));
 		store.dispatch(cartActions.addItemToCart(product));
+		await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+		resolveFirstRequest(
+			new Response(
+				JSON.stringify({
+					cart: { items: [{ ...product, quantity: 1 }], revision: 1 },
+				}),
+				{ headers: { "Content-Type": "application/json" }, status: 200 }
+			)
+		);
 		await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
 
 		expect(JSON.parse(fetchMock.mock.calls[0][1]?.body as string)).toEqual({
@@ -40,6 +46,36 @@ describe("cart synchronization", () => {
 			productId: "p1",
 		});
 		expect(fetchMock.mock.calls[0][1]?.method).toBe("PATCH");
+		expect(fetchMock.mock.calls[0][1]?.signal).toBeInstanceOf(AbortSignal);
+	});
+
+	it("restores the authoritative cart after a failed optimistic mutation", async () => {
+		const fetchMock = vi
+			.fn()
+			.mockResolvedValueOnce(
+				new Response(JSON.stringify({ message: "unavailable" }), {
+					headers: { "Content-Type": "application/json" },
+					status: 503,
+				})
+			)
+			.mockResolvedValueOnce(
+				new Response(JSON.stringify({ cart: { items: [], revision: 0 } }), {
+					headers: { "Content-Type": "application/json" },
+					status: 200,
+				})
+			);
+		vi.stubGlobal("fetch", fetchMock);
+		const store = makeStore();
+		store.dispatch(cartActions.hydrateCart({ items: [], revision: 0 }));
+
+		store.dispatch(cartActions.addItemToCart(product));
+
+		await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+		await vi.waitFor(() =>
+			expect(store.getState().ui.notification?.status).toBe("error")
+		);
+		expect(store.getState().cart).toMatchObject({ items: [], revision: 0 });
+		expect(fetchMock.mock.calls[1][1]).toMatchObject({ cache: "no-store" });
 	});
 
 	it("ignores stale mutation responses", () => {

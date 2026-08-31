@@ -1,5 +1,5 @@
 import { validatePersistedCart } from "@/shared/cart-schema";
-import type { CartMutation } from "@/shared/types";
+import type { CartMutation, PersistedCart } from "@/shared/types";
 import type { AppDispatch, RootState } from ".";
 import { cartActions } from "./cart-slice";
 import { uiActions } from "./ui-slice";
@@ -9,18 +9,26 @@ type CartApiResponse = {
 	message?: string;
 };
 
+const CART_REQUEST_TIMEOUT_MS = 10_000;
+
 async function readJson(response: Response): Promise<CartApiResponse> {
 	return (await response.json()) as CartApiResponse;
+}
+
+async function requestCurrentCart(): Promise<PersistedCart> {
+	const response = await fetch("/api/cart", {
+		cache: "no-store",
+		signal: AbortSignal.timeout(CART_REQUEST_TIMEOUT_MS),
+	});
+	if (!response.ok) throw new Error("Unable to fetch cart");
+	const body = await readJson(response);
+	return validatePersistedCart(body.cart);
 }
 
 export const fetchCartData = () => {
 	return async (dispatch: AppDispatch) => {
 		try {
-			const response = await fetch("/api/cart", { cache: "no-store" });
-			if (!response.ok) throw new Error("Unable to fetch cart");
-			const body = await readJson(response);
-			const cart = await validatePersistedCart(body.cart);
-			dispatch(cartActions.hydrateCart(cart));
+			dispatch(cartActions.hydrateCart(await requestCurrentCart()));
 		} catch {
 			dispatch(cartActions.markHydrated());
 			dispatch(
@@ -49,6 +57,7 @@ export const sendCartMutation = (mutation: CartMutation) => {
 				body: JSON.stringify(mutation),
 				headers: { "Content-Type": "application/json" },
 				method: "PATCH",
+				signal: AbortSignal.timeout(CART_REQUEST_TIMEOUT_MS),
 			});
 			const body = await readJson(response);
 
@@ -66,6 +75,11 @@ export const sendCartMutation = (mutation: CartMutation) => {
 				})
 			);
 		} catch {
+			try {
+				dispatch(cartActions.hydrateCart(await requestCurrentCart()));
+			} catch {
+				// Preserve the optimistic state when the authoritative cart is unreachable.
+			}
 			dispatch(
 				uiActions.showNotification({
 					message: "Sent cart data failed!",
