@@ -84,7 +84,9 @@ describe("Firebase REST client", () => {
 
 		const url = new URL(String(fetchMock.mock.calls[0][0]));
 		expect(url.origin).toBe("http://127.0.0.1:9000");
-		expect(url.searchParams.get("ns")).toBe("demo-redux-cart");
+		expect(url.searchParams.get("ns")).toBe(
+			"demo-redux-cart-default-rtdb"
+		);
 		expect(
 			new Headers(fetchMock.mock.calls[0][1]?.headers).get("Authorization")
 		).toBe("Bearer owner");

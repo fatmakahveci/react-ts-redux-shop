@@ -74,10 +74,11 @@ function readFirebaseEnvironment(): FirebaseEnvironment {
 			);
 		}
 
-		const namespace = process.env.FIREBASE_PROJECT_ID ?? "demo-redux-cart";
-		if (!/^demo-[a-z0-9-]+$/.test(namespace)) {
+		const projectId = process.env.FIREBASE_PROJECT_ID ?? "demo-redux-cart";
+		if (!/^demo-[a-z0-9-]+$/.test(projectId)) {
 			throw new Error("Firebase emulator project ID must start with demo-.");
 		}
+		const namespace = `${projectId}-default-rtdb`;
 
 		return { databaseURL, mode: "emulator", namespace };
 	}

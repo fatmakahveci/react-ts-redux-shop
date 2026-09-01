@@ -61,7 +61,7 @@ A full-stack shopping-cart example built with Next.js App Router, React, Redux T
 
 5. Open [http://localhost:3000](http://localhost:3000). The Emulator Suite UI is available at [http://127.0.0.1:4000](http://127.0.0.1:4000).
 
-The committed `demo-redux-cart` project ID is intentionally demo-only. Firebase CLI does not require login or account permissions for this workflow, and the server rejects non-local emulator hosts and non-`demo-` emulator project IDs.
+The committed `demo-redux-cart` project ID is intentionally demo-only. The app derives Firebase's canonical `demo-redux-cart-default-rtdb` namespace from it, matching the emulator's configured default database and rules. Firebase CLI does not require login or account permissions for this workflow, and the server rejects non-local emulator hosts and non-`demo-` emulator project IDs.
 
 ## Production setup
 
