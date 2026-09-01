@@ -133,6 +133,46 @@ describe("cart API", () => {
 		expect(response.status).toBe(403);
 	});
 
+	it("rejects writes without an Origin header", async () => {
+		const response = await PATCH(
+			new Request("http://shop.test/api/cart", {
+				body: JSON.stringify({ delta: 1, productId: "p1" }),
+				headers: { "Content-Type": "application/json" },
+				method: "PATCH",
+			})
+		);
+
+		expect(response.status).toBe(403);
+		expect(mutateCartMock).not.toHaveBeenCalled();
+	});
+
+	it("rejects origins with a mismatched protocol", async () => {
+		const response = await PATCH(
+			mutationRequest(JSON.stringify({ delta: 1, productId: "p1" }), {
+				origin: "https://shop.test",
+			})
+		);
+
+		expect(response.status).toBe(403);
+		expect(mutateCartMock).not.toHaveBeenCalled();
+	});
+
+	it("accepts the public HTTPS origin behind a trusted proxy", async () => {
+		mutateCartMock.mockResolvedValue({
+			cart: { items: [], revision: 1 },
+			rateLimited: false,
+		});
+		const response = await PATCH(
+			mutationRequest(JSON.stringify({ delta: 1, productId: "p1" }), {
+				host: "shop.test",
+				origin: "https://shop.test",
+				"x-forwarded-proto": "https",
+			})
+		);
+
+		expect(response.status).toBe(200);
+	});
+
 	it("rejects unsupported content types", async () => {
 		const response = await PATCH(
 			mutationRequest(JSON.stringify({ delta: 1, productId: "p1" }), {

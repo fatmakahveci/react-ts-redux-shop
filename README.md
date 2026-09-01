@@ -105,8 +105,8 @@ Without Firebase environment variables, the storefront still renders and reports
 - Never expose `FIREBASE_PRIVATE_KEY` or commit a populated environment file.
 - Use only `demo-` project IDs for the repository's emulator workflow.
 - Keep Firebase client rules default-deny and grant database access only to the server service account.
-- The cart cookie is opaque, HttpOnly, same-site and secure in production.
-- Cart request bodies are streamed through a byte limit and checked for origin, content type and schema validity.
+- The production cart cookie uses the `__Host-` prefix and is opaque, HttpOnly, SameSite=Strict and Secure.
+- Cart writes require an exact scheme-and-host Origin match; request bodies are streamed through a byte limit and checked for content type and schema validity.
 - Product identity, title, price and revision are controlled by the server; clients can request only quantity mutations.
 - Production pages use request-specific CSP nonces instead of `unsafe-inline` scripts.
 - Outbound OAuth and Firebase calls have explicit timeouts.

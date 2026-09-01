@@ -15,7 +15,8 @@ import { ValidationError } from "yup";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const CART_SESSION_COOKIE = "cart_session";
+const CART_SESSION_COOKIE =
+	process.env.NODE_ENV === "production" ? "__Host-cart_session" : "cart_session";
 const MAX_MUTATION_BYTES = 2_048;
 const UUID_PATTERN =
 	/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -33,7 +34,7 @@ async function getCartSessionId(): Promise<string> {
 		httpOnly: true,
 		maxAge: 60 * 60 * 24 * 30,
 		path: "/",
-		sameSite: "lax",
+		sameSite: "strict",
 		secure: process.env.NODE_ENV === "production",
 	});
 

@@ -5,17 +5,20 @@ export function proxy(request: NextRequest): NextResponse {
 	const isDevelopment = process.env.NODE_ENV === "development";
 	const contentSecurityPolicy = `
 		default-src 'self';
-		base-uri 'self';
+		base-uri 'none';
 		connect-src 'self'${isDevelopment ? " ws:" : ""};
 		font-src 'self';
 		form-action 'self';
 		frame-ancestors 'none';
 		img-src 'self' blob: data:;
+		manifest-src 'self';
+		media-src 'self';
 		object-src 'none';
 		script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${
 			isDevelopment ? " 'unsafe-eval'" : ""
 		};
 		style-src 'self' ${isDevelopment ? "'unsafe-inline'" : `'nonce-${nonce}'`};
+		worker-src 'self' blob:;
 		${isDevelopment ? "" : "upgrade-insecure-requests;"}
 	`
 		.replace(/\s{2,}/g, " ")

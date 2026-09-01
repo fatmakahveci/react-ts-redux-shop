@@ -11,5 +11,7 @@ describe("CSP proxy", () => {
 		expect(csp).toContain("'strict-dynamic'");
 		expect(csp).not.toContain("script-src 'self' 'unsafe-inline'");
 		expect(csp).toContain("frame-ancestors 'none'");
+		expect(csp).toContain("base-uri 'none'");
+		expect(csp).toContain("object-src 'none'");
 	});
 });

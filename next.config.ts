@@ -7,6 +7,8 @@ const securityHeaders = [
 	{ key: "Cross-Origin-Resource-Policy", value: "same-origin" },
 	{ key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
 	{ key: "X-DNS-Prefetch-Control", value: "off" },
+	{ key: "X-Permitted-Cross-Domain-Policies", value: "none" },
+	{ key: "Origin-Agent-Cluster", value: "?1" },
 	{
 		key: "Permissions-Policy",
 		value: "camera=(), geolocation=(), microphone=()",

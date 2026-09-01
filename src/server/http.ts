@@ -7,11 +7,26 @@ export function isJsonRequest(request: Request): boolean {
 
 export function isSameOriginRequest(request: Request): boolean {
 	const origin = request.headers.get("origin");
-	if (!origin) return true;
+	if (!origin || origin === "null") return false;
 
 	try {
+		const originUrl = new URL(origin);
+		const requestUrl = new URL(request.url);
 		const requestHost = request.headers.get("host") ?? new URL(request.url).host;
-		return new URL(origin).host === requestHost;
+		const forwardedProtocol = request.headers
+			.get("x-forwarded-proto")
+			?.split(",", 1)[0]
+			.trim()
+			.toLowerCase();
+		const requestProtocol = forwardedProtocol
+			? `${forwardedProtocol}:`
+			: requestUrl.protocol;
+		if (!["http:", "https:"].includes(requestProtocol)) return false;
+
+		return (
+			originUrl.protocol === requestProtocol &&
+			originUrl.host.toLowerCase() === requestHost.toLowerCase()
+		);
 	} catch {
 		return false;
 	}
