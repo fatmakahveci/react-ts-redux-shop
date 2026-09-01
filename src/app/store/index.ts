@@ -1,5 +1,5 @@
 import CartSliceReducer, { cartActions } from "@/app/store/cart-slice";
-import { sendCartMutation } from "@/app/store/cart-actions";
+import { queueCartMutation } from "@/app/store/cart-actions";
 import UiSliceReducer from "@/app/store/ui-slice";
 import type { CartMutation } from "@/shared/types";
 import {
@@ -35,7 +35,7 @@ export function makeStore() {
 				return;
 			}
 
-			let mutation: CartMutation;
+			let mutation: Omit<CartMutation, "mutationId">;
 			if (cartActions.addItemToCart.match(action)) {
 				mutation = { delta: 1, productId: action.payload.id };
 			} else if (cartActions.removeItemFromCart.match(action)) {
@@ -45,7 +45,15 @@ export function makeStore() {
 			}
 			const dispatch = listenerApi.dispatch as AppDispatch;
 			const persistMutation = async () => {
-				await dispatch(sendCartMutation(mutation));
+				const queued = await dispatch(queueCartMutation(mutation));
+				if (!queued) {
+					dispatch(
+						cartActions.hydrateCart({
+							items: originalState.cart.items,
+							revision: originalState.cart.revision,
+						})
+					);
+				}
 			};
 			mutationQueue = mutationQueue.then(persistMutation, persistMutation);
 			await mutationQueue;

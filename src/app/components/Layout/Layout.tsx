@@ -5,8 +5,13 @@ import MainHeader from "./MainHeader";
 const Layout: FC<LayoutProps> = ({ children }): React.ReactElement => {
 	return (
 		<>
+			<a className="skip-link" href="#main-content">
+				Skip to book catalog
+			</a>
 			<MainHeader />
-			<main>{children}</main>
+			<main id="main-content" tabIndex={-1}>
+				{children}
+			</main>
 		</>
 	);
 };

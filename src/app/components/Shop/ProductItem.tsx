@@ -3,7 +3,7 @@ import { cartActions } from "@/app/store/cart-slice";
 import { useAppDispatch } from "@/app/store/hooks";
 import { formatCurrency } from "@/shared/format";
 import type { CatalogProduct } from "@/shared/types";
-import type { FC } from "react";
+import { memo, type FC } from "react";
 import styles from "./ProductItem.module.css";
 
 const coverClasses = [
@@ -68,7 +68,11 @@ const ProductItem: FC<CatalogProduct> = ({
 					</details>
 				</div>
 				<div className={styles.actions}>
-					<button onClick={addToCartHandler} type="button">
+					<button
+						aria-label={`Add ${title} to cart`}
+						onClick={addToCartHandler}
+						type="button"
+					>
 						Add to Cart
 					</button>
 				</div>
@@ -77,4 +81,4 @@ const ProductItem: FC<CatalogProduct> = ({
 	);
 };
 
-export default ProductItem;
+export default memo(ProductItem);

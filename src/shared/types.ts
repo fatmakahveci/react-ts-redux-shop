@@ -19,6 +19,7 @@ export type PersistedCart = {
 
 export type CartMutation = {
 	delta: -1 | 1;
+	mutationId: string;
 	productId: string;
 };
 

@@ -42,4 +42,49 @@ describe("CartDrawer", () => {
 		);
 		expect(store.getState().ui.cartIsVisible).toBe(false);
 	});
+
+	it("closes from the backdrop without treating drawer interactions as dismissals", () => {
+		const store = makeStore();
+		store.dispatch(uiActions.toggle());
+		render(
+			<Provider store={store}>
+				<CartDrawer />
+			</Provider>
+		);
+
+		const dialog = screen.getByRole("dialog", { name: "Your Shopping Cart" });
+		fireEvent.mouseDown(dialog);
+		expect(store.getState().ui.cartIsVisible).toBe(true);
+
+		fireEvent.mouseDown(dialog.parentElement as HTMLElement);
+		expect(store.getState().ui.cartIsVisible).toBe(false);
+	});
+
+	it("keeps keyboard focus inside the drawer and restores it on unmount", () => {
+		const opener = document.createElement("button");
+		opener.textContent = "Open cart";
+		document.body.append(opener);
+		opener.focus();
+		const store = makeStore();
+		const view = render(
+			<Provider store={store}>
+				<CartDrawer />
+			</Provider>
+		);
+
+		const closeButton = screen.getByRole("button", {
+			name: "Close shopping cart",
+		});
+		const catalogLink = screen.getByRole("link", { name: "Browse the shelf" });
+		catalogLink.focus();
+		fireEvent.keyDown(document, { key: "Tab" });
+		expect(closeButton).toHaveFocus();
+
+		fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+		expect(catalogLink).toHaveFocus();
+
+		view.unmount();
+		expect(opener).toHaveFocus();
+		opener.remove();
+	});
 });

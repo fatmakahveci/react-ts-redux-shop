@@ -8,20 +8,25 @@ A full-stack shopping-cart example built with Next.js App Router, React, Redux T
 - Search across titles, authors and descriptions.
 - Category filtering and price/title sorting.
 - Expandable book details with author, category and page information.
-- Keyboard-accessible cart drawer with focus management, subtotal and free-shipping progress.
+- Keyboard-accessible navigation and cart drawer with a skip link, descriptive controls, focus management, subtotal and free-shipping progress.
 - Demo checkout with delivery details, payment choice, order confirmation and atomic server-side cart clearing.
+- Offline-safe cart updates with automatic retry and visible synchronization status.
 - Mobile and desktop accessibility coverage with Playwright and Axe.
 
 ## Architecture
 
 - Server Components own the root layout and metadata.
 - A small client provider creates an isolated Redux store.
+- The cart and checkout UI load as a separate client chunk only when the drawer is opened; memoized product cards avoid unrelated rerenders while catalog controls change.
 - The browser talks only to the same-origin `/api/cart` route.
 - Firebase service-account credentials remain server-side.
 - Each anonymous visitor receives a 30-day, HttpOnly cart-session cookie and a separate database record.
 - Runtime schemas validate both incoming requests and stored Firebase data.
 - The client sends only product IDs and `+1/-1` mutations; the server owns prices, titles and revisions.
-- Each browser store sends mutations sequentially and restores the authoritative cart after a failed optimistic update.
+- Each browser store persists mutations in a versioned, bounded local queue, safely compacts unsent inverse changes and retries with exponential backoff or when connectivity returns.
+- Web Locks coordinate queue writes and flushes across tabs where supported; server idempotency remains the correctness fallback everywhere else.
+- Every mutation carries a random idempotency key; Firebase stores a bounded deduplication history so a lost response can never apply the same quantity change twice.
+- Checkout clearing reuses its own idempotency key across retries, preventing a lost response from completing the same checkout twice.
 - Firebase ETag transactions serialize mutations, preserving concurrent changes from multiple tabs.
 - Cart records carry expiry and persistent rate-limit metadata; an authenticated cleanup endpoint removes expired records.
 
@@ -110,7 +115,7 @@ Without Firebase environment variables, the storefront still renders and reports
 - Product identity, title, price and revision are controlled by the server; clients can request only quantity mutations.
 - Production pages use request-specific CSP nonces instead of `unsafe-inline` scripts.
 - Outbound OAuth and Firebase calls have explicit timeouts.
-- Browser cart requests also have explicit timeouts and failure reconciliation.
+- Browser cart requests have explicit timeouts, a durable retry queue and server-side idempotency protection.
 
 ## Current product scope
 

@@ -1,13 +1,22 @@
 "use client";
 
-import CartDrawer from "@/app/components/Cart/CartDrawer";
 import Layout from "@/app/components/Layout/Layout";
 import Products from "@/app/components/Shop/Products";
 import Notification from "@/app/components/UI/Notification";
-import { fetchCartData } from "@/app/store/cart-actions";
+import {
+	fetchCartData,
+	LEGACY_PENDING_CART_MUTATIONS_KEY,
+	PENDING_CART_MUTATIONS_KEY,
+	retryPendingCartMutations,
+} from "@/app/store/cart-actions";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { uiActions } from "@/app/store/ui-slice";
+import dynamic from "next/dynamic";
 import { useEffect, useRef } from "react";
+
+const CartDrawer = dynamic(() => import("@/app/components/Cart/CartDrawer"), {
+	ssr: false,
+});
 
 export default function AppShell(): React.ReactElement {
 	const dispatch = useAppDispatch();
@@ -20,7 +29,27 @@ export default function AppShell(): React.ReactElement {
 	useEffect(() => {
 		if (fetchStarted.current) return;
 		fetchStarted.current = true;
-		dispatch(fetchCartData());
+		void dispatch(fetchCartData()).then(() =>
+			dispatch(retryPendingCartMutations())
+		);
+	}, [dispatch]);
+
+	useEffect(() => {
+		const retry = () => void dispatch(retryPendingCartMutations());
+		const retryFromStorage = (event: StorageEvent) => {
+			if (
+				event.key === PENDING_CART_MUTATIONS_KEY ||
+				event.key === LEGACY_PENDING_CART_MUTATIONS_KEY
+			) {
+				retry();
+			}
+		};
+		window.addEventListener("online", retry);
+		window.addEventListener("storage", retryFromStorage);
+		return () => {
+			window.removeEventListener("online", retry);
+			window.removeEventListener("storage", retryFromStorage);
+		};
 	}, [dispatch]);
 
 	useEffect(() => {

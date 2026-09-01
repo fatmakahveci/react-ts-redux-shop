@@ -1,5 +1,8 @@
 import { createSign } from "node:crypto";
-import { validatePersistedCart } from "@/shared/cart-schema";
+import {
+	MUTATION_ID_PATTERN,
+	validatePersistedCart,
+} from "@/shared/cart-schema";
 import { getProduct, MAX_CART_REVISION } from "@/shared/constants";
 import type { CartMutation, PersistedCart } from "@/shared/types";
 
@@ -28,6 +31,7 @@ type AccessToken = {
 type StoredCart = {
 	cart: PersistedCart;
 	expiresAt: number;
+	processedMutationIds: Record<string, number>;
 	rateLimit: {
 		count: number;
 		windowStartedAt: number;
@@ -44,6 +48,7 @@ export type CartMutationResult = {
 const CART_TTL_MS = 30 * 24 * 60 * 60 * 1_000;
 const DATABASE_TIMEOUT_MS = 8_000;
 const MUTATION_LIMIT = 60;
+const PROCESSED_MUTATION_LIMIT = 256;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const TOKEN_TIMEOUT_MS = 5_000;
 
@@ -213,6 +218,7 @@ async function parseStoredCart(raw: unknown, now: number): Promise<StoredCart> {
 		return {
 			cart: emptyCart(),
 			expiresAt: now + CART_TTL_MS,
+			processedMutationIds: {},
 			rateLimit: { count: 0, windowStartedAt: now },
 			updatedAt: now,
 		};
@@ -232,6 +238,22 @@ async function parseStoredCart(raw: unknown, now: number): Promise<StoredCart> {
 			? raw.expiresAt
 			: now + CART_TTL_MS;
 	const rateLimitValue = wrapped && isRecord(raw.rateLimit) ? raw.rateLimit : {};
+	const processedMutationValue =
+		wrapped && isRecord(raw.processedMutationIds)
+			? raw.processedMutationIds
+			: {};
+	const processedMutationIds = Object.fromEntries(
+		Object.entries(processedMutationValue)
+			.filter(
+				(entry): entry is [string, number] =>
+					MUTATION_ID_PATTERN.test(entry[0]) &&
+					typeof entry[1] === "number" &&
+					Number.isSafeInteger(entry[1]) &&
+					entry[1] >= 0
+			)
+			.sort((first, second) => second[1] - first[1])
+			.slice(0, PROCESSED_MUTATION_LIMIT)
+	);
 	const count =
 		typeof rateLimitValue.count === "number" &&
 		Number.isSafeInteger(rateLimitValue.count) &&
@@ -247,6 +269,7 @@ async function parseStoredCart(raw: unknown, now: number): Promise<StoredCart> {
 	return {
 		cart: expiresAt <= now ? emptyCart() : cart,
 		expiresAt,
+		processedMutationIds,
 		rateLimit: { count, windowStartedAt },
 		updatedAt:
 			wrapped && typeof raw.updatedAt === "number" ? raw.updatedAt : now,
@@ -255,6 +278,21 @@ async function parseStoredCart(raw: unknown, now: number): Promise<StoredCart> {
 
 function cartPath(sessionId: string): string {
 	return `carts/${encodeURIComponent(sessionId)}.json`;
+}
+
+function recordProcessedMutation(
+	processedMutationIds: Record<string, number>,
+	mutationId: string,
+	now: number
+): Record<string, number> {
+	return Object.fromEntries(
+		[
+			...Object.entries(processedMutationIds),
+			[mutationId, now] as const,
+		]
+			.sort((first, second) => second[1] - first[1])
+			.slice(0, PROCESSED_MUTATION_LIMIT)
+	);
 }
 
 export async function readCart(sessionId: string): Promise<PersistedCart> {
@@ -285,6 +323,9 @@ export async function mutateCart(
 		const etag = currentResponse.headers.get("etag");
 		if (!etag) throw new Error("Firebase did not provide an ETag.");
 		const stored = await parseStoredCart(await currentResponse.json(), now);
+		if (mutation.mutationId in stored.processedMutationIds) {
+			return { cart: stored.cart, rateLimited: false };
+		}
 		const withinWindow =
 			now - stored.rateLimit.windowStartedAt < RATE_LIMIT_WINDOW_MS;
 		const count = withinWindow ? stored.rateLimit.count : 0;
@@ -337,6 +378,11 @@ export async function mutateCart(
 		const nextStored: StoredCart = {
 			cart,
 			expiresAt: now + CART_TTL_MS,
+			processedMutationIds: recordProcessedMutation(
+				stored.processedMutationIds,
+				mutation.mutationId,
+				now
+			),
 			rateLimit: { count: count + 1, windowStartedAt },
 			updatedAt: now,
 		};
@@ -358,7 +404,8 @@ export async function mutateCart(
 }
 
 export async function clearCart(
-	sessionId: string
+	sessionId: string,
+	mutationId: string
 ): Promise<CartMutationResult> {
 	for (let attempt = 0; attempt < 8; attempt++) {
 		const now = Date.now();
@@ -371,6 +418,9 @@ export async function clearCart(
 		const etag = currentResponse.headers.get("etag");
 		if (!etag) throw new Error("Firebase did not provide an ETag.");
 		const stored = await parseStoredCart(await currentResponse.json(), now);
+		if (mutationId in stored.processedMutationIds) {
+			return { cart: stored.cart, rateLimited: false };
+		}
 		const withinWindow =
 			now - stored.rateLimit.windowStartedAt < RATE_LIMIT_WINDOW_MS;
 		const count = withinWindow ? stored.rateLimit.count : 0;
@@ -401,6 +451,11 @@ export async function clearCart(
 		const nextStored: StoredCart = {
 			cart,
 			expiresAt: now + CART_TTL_MS,
+			processedMutationIds: recordProcessedMutation(
+				stored.processedMutationIds,
+				mutationId,
+				now
+			),
 			rateLimit: { count: count + 1, windowStartedAt },
 			updatedAt: now,
 		};

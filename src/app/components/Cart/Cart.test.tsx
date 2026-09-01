@@ -33,9 +33,11 @@ describe("Cart", () => {
 		});
 		expect(checkoutButton).toBeEnabled();
 		fireEvent.click(checkoutButton);
-		expect(
-			screen.getByRole("heading", { name: "Delivery details" })
-		).toBeVisible();
+		const checkoutHeading = screen.getByRole("heading", {
+			name: "Delivery details",
+		});
+		expect(checkoutHeading).toBeVisible();
+		expect(checkoutHeading).toHaveFocus();
 	});
 
 	it("offers a catalog link when empty", () => {

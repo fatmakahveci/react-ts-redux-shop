@@ -21,6 +21,12 @@ vi.mock("next/headers", () => ({
 
 import { DELETE, GET, PATCH } from "./route";
 
+const mutationId = "c26b00b5-1234-4123-8123-123456789abc";
+
+function validMutation(productId = "p1"): string {
+	return JSON.stringify({ delta: 1, mutationId, productId });
+}
+
 function mutationRequest(body: string, headers?: HeadersInit): Request {
 	return new Request("http://shop.test/api/cart", {
 		body,
@@ -30,6 +36,17 @@ function mutationRequest(body: string, headers?: HeadersInit): Request {
 			...headers,
 		},
 		method: "PATCH",
+	});
+}
+
+function deleteRequest(headers?: HeadersInit): Request {
+	return new Request("http://shop.test/api/cart", {
+		headers: {
+			"Idempotency-Key": mutationId,
+			origin: "http://shop.test",
+			...headers,
+		},
+		method: "DELETE",
 	});
 }
 
@@ -46,20 +63,25 @@ describe("cart API", () => {
 			rateLimited: false,
 		});
 
-		const response = await DELETE(
-			new Request("http://shop.test/api/cart", {
-				headers: { origin: "http://shop.test" },
-				method: "DELETE",
-			})
-		);
+		const response = await DELETE(deleteRequest());
 
 		expect(response.status).toBe(200);
 		expect(await response.json()).toEqual({
 			cart: { items: [], revision: 4 },
 		});
 		expect(clearCartMock).toHaveBeenCalledWith(
-			"b16b00b5-1234-4123-8123-123456789abc"
+			"b16b00b5-1234-4123-8123-123456789abc",
+			mutationId
 		);
+	});
+
+	it("rejects checkout requests without a valid idempotency key", async () => {
+		const response = await DELETE(
+			deleteRequest({ "Idempotency-Key": "predictable" })
+		);
+
+		expect(response.status).toBe(400);
+		expect(clearCartMock).not.toHaveBeenCalled();
 	});
 
 	it("returns the current cart", async () => {
@@ -72,6 +94,28 @@ describe("cart API", () => {
 		expect(response.headers.get("x-request-id")).toBeTruthy();
 	});
 
+	it("returns safe service errors when Firebase operations fail", async () => {
+		const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+		readCartMock.mockRejectedValueOnce(new Error("database credential leaked"));
+		mutateCartMock.mockRejectedValueOnce(new Error("firebase write failed"));
+		clearCartMock.mockRejectedValueOnce(new Error("firebase delete failed"));
+
+		const responses = await Promise.all([
+			GET(),
+			PATCH(mutationRequest(validMutation())),
+			DELETE(deleteRequest()),
+		]);
+
+		for (const response of responses) {
+			expect(response.status).toBe(503);
+			expect(await response.json()).toEqual({
+				message: "Cart service is unavailable.",
+			});
+			expect(response.headers.get("x-request-id")).toBeTruthy();
+		}
+		expect(consoleError).toHaveBeenCalledTimes(3);
+	});
+
 	it("applies a validated server-side mutation", async () => {
 		mutateCartMock.mockResolvedValue({
 			cart: {
@@ -82,13 +126,13 @@ describe("cart API", () => {
 		});
 
 		const response = await PATCH(
-			mutationRequest(JSON.stringify({ delta: 1, productId: "p1" }))
+			mutationRequest(validMutation())
 		);
 
 		expect(response.status).toBe(200);
 		expect(mutateCartMock).toHaveBeenCalledWith(
 			"b16b00b5-1234-4123-8123-123456789abc",
-			{ delta: 1, productId: "p1" }
+			{ delta: 1, mutationId, productId: "p1" }
 		);
 	});
 
@@ -99,7 +143,7 @@ describe("cart API", () => {
 		});
 
 		const response = await PATCH(
-			mutationRequest(JSON.stringify({ delta: 1, productId: "p1" }), {
+			mutationRequest(validMutation(), {
 				host: "127.0.0.1:3000",
 				origin: "http://127.0.0.1:3000",
 			})
@@ -116,7 +160,7 @@ describe("cart API", () => {
 		});
 
 		const response = await PATCH(
-			mutationRequest(JSON.stringify({ delta: 1, productId: "p1" }))
+			mutationRequest(validMutation())
 		);
 
 		expect(response.status).toBe(429);
@@ -125,7 +169,7 @@ describe("cart API", () => {
 
 	it("rejects cross-origin writes", async () => {
 		const response = await PATCH(
-			mutationRequest(JSON.stringify({ delta: 1, productId: "p1" }), {
+			mutationRequest(validMutation(), {
 				origin: "https://attacker.test",
 			})
 		);
@@ -136,7 +180,7 @@ describe("cart API", () => {
 	it("rejects writes without an Origin header", async () => {
 		const response = await PATCH(
 			new Request("http://shop.test/api/cart", {
-				body: JSON.stringify({ delta: 1, productId: "p1" }),
+				body: validMutation(),
 				headers: { "Content-Type": "application/json" },
 				method: "PATCH",
 			})
@@ -148,7 +192,7 @@ describe("cart API", () => {
 
 	it("rejects origins with a mismatched protocol", async () => {
 		const response = await PATCH(
-			mutationRequest(JSON.stringify({ delta: 1, productId: "p1" }), {
+			mutationRequest(validMutation(), {
 				origin: "https://shop.test",
 			})
 		);
@@ -163,7 +207,7 @@ describe("cart API", () => {
 			rateLimited: false,
 		});
 		const response = await PATCH(
-			mutationRequest(JSON.stringify({ delta: 1, productId: "p1" }), {
+			mutationRequest(validMutation(), {
 				host: "shop.test",
 				origin: "https://shop.test",
 				"x-forwarded-proto": "https",
@@ -175,7 +219,7 @@ describe("cart API", () => {
 
 	it("rejects unsupported content types", async () => {
 		const response = await PATCH(
-			mutationRequest(JSON.stringify({ delta: 1, productId: "p1" }), {
+			mutationRequest(validMutation(), {
 				"Content-Type": "text/plain",
 			})
 		);
@@ -192,7 +236,7 @@ describe("cart API", () => {
 	it("rejects invalid JSON and unknown products", async () => {
 		const invalidJson = await PATCH(mutationRequest("not-json"));
 		const unknownProduct = await PATCH(
-			mutationRequest(JSON.stringify({ delta: 1, productId: "unknown" }))
+			mutationRequest(validMutation("unknown"))
 		);
 
 		expect(invalidJson.status).toBe(400);

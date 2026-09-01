@@ -5,6 +5,7 @@ const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
 const privateKeyPem = privateKey.export({ format: "pem", type: "pkcs8" }).toString();
 
 const sessionId = "b16b00b5-1234-4123-8123-123456789abc";
+const mutationId = "c26b00b5-1234-4123-8123-123456789abc";
 
 function useEmulator(): void {
 	delete process.env.FIREBASE_DATABASE_URL;
@@ -48,7 +49,11 @@ describe("Firebase REST client", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { mutateCart } = await import("./firebase-rest");
 
-		const result = await mutateCart(sessionId, { delta: 1, productId: "p1" });
+		const result = await mutateCart(sessionId, {
+			delta: 1,
+			mutationId,
+			productId: "p1",
+		});
 
 		expect(result).toMatchObject({
 			cart: {
@@ -65,6 +70,7 @@ describe("Firebase REST client", () => {
 		expect(JSON.parse(write[1]?.body as string)).toMatchObject({
 			cart: { items: [{ price: 6, title: "My First Book" }], revision: 2 },
 			expiresAt: expect.any(Number),
+			processedMutationIds: { [mutationId]: expect.any(Number) },
 			rateLimit: { count: 1 },
 		});
 	});
@@ -80,7 +86,7 @@ describe("Firebase REST client", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { mutateCart } = await import("./firebase-rest");
 
-		await mutateCart(sessionId, { delta: 1, productId: "p1" });
+		await mutateCart(sessionId, { delta: 1, mutationId, productId: "p1" });
 
 		const url = new URL(String(fetchMock.mock.calls[0][0]));
 		expect(url.origin).toBe("http://127.0.0.1:9000");
@@ -114,7 +120,7 @@ describe("Firebase REST client", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { clearCart } = await import("./firebase-rest");
 
-		await expect(clearCart(sessionId)).resolves.toMatchObject({
+		await expect(clearCart(sessionId, mutationId)).resolves.toMatchObject({
 			cart: { items: [], revision: 4 },
 			rateLimited: false,
 		});
@@ -122,8 +128,33 @@ describe("Firebase REST client", () => {
 		expect(new Headers(write[1]?.headers).get("If-Match")).toBe('"revision-3"');
 		expect(JSON.parse(write[1]?.body as string)).toMatchObject({
 			cart: { items: [], revision: 4 },
+			processedMutationIds: { [mutationId]: expect.any(Number) },
 			rateLimit: { count: 3 },
 		});
+	});
+
+	it("does not clear the same checkout twice", async () => {
+		useEmulator();
+		const storedCart = {
+			cart: { items: [], revision: 4 },
+			expiresAt: Date.now() + 60_000,
+			processedMutationIds: { [mutationId]: Date.now() },
+			rateLimit: { count: 60, windowStartedAt: Date.now() },
+			updatedAt: Date.now(),
+		};
+		const fetchMock = vi.fn().mockResolvedValue(
+			new Response(JSON.stringify(storedCart), {
+				headers: { etag: '"revision-4"' },
+			})
+		);
+		vi.stubGlobal("fetch", fetchMock);
+		const { clearCart } = await import("./firebase-rest");
+
+		await expect(clearCart(sessionId, mutationId)).resolves.toEqual({
+			cart: storedCart.cart,
+			rateLimited: false,
+		});
+		expect(fetchMock).toHaveBeenCalledOnce();
 	});
 
 	it("retries ETag conflicts and preserves the concurrent cart", async () => {
@@ -152,13 +183,43 @@ describe("Firebase REST client", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { mutateCart } = await import("./firebase-rest");
 
-		const result = await mutateCart(sessionId, { delta: 1, productId: "p2" });
+		const result = await mutateCart(sessionId, {
+			delta: 1,
+			mutationId,
+			productId: "p2",
+		});
 
 		expect(fetchMock).toHaveBeenCalledTimes(4);
 		expect(result.cart).toMatchObject({
 			items: [{ id: "p1" }, { id: "p2" }],
 			revision: 2,
 		});
+	});
+
+	it("returns an already processed mutation without applying it twice", async () => {
+		useEmulator();
+		const storedCart = {
+			cart: {
+				items: [{ id: "p1", price: 6, quantity: 1, title: "My First Book" }],
+				revision: 1,
+			},
+			expiresAt: Date.now() + 60_000,
+			processedMutationIds: { [mutationId]: Date.now() },
+			rateLimit: { count: 60, windowStartedAt: Date.now() },
+			updatedAt: Date.now(),
+		};
+		const fetchMock = vi.fn().mockResolvedValue(
+			new Response(JSON.stringify(storedCart), {
+				headers: { etag: '"revision-1"' },
+			})
+		);
+		vi.stubGlobal("fetch", fetchMock);
+		const { mutateCart } = await import("./firebase-rest");
+
+		await expect(
+			mutateCart(sessionId, { delta: 1, mutationId, productId: "p1" })
+		).resolves.toEqual({ cart: storedCart.cart, rateLimited: false });
+		expect(fetchMock).toHaveBeenCalledOnce();
 	});
 
 	it("canonicalizes legacy stored product fields", async () => {
@@ -221,7 +282,11 @@ describe("Firebase REST client", () => {
 		vi.stubGlobal("fetch", fetchMock);
 		const { mutateCart } = await import("./firebase-rest");
 
-		const result = await mutateCart(sessionId, { delta: 1, productId: "p1" });
+		const result = await mutateCart(sessionId, {
+			delta: 1,
+			mutationId,
+			productId: "p1",
+		});
 
 		expect(result.rateLimited).toBe(true);
 		expect(result.retryAfter).toBeGreaterThan(0);

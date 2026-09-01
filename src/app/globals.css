@@ -22,6 +22,25 @@ body.cart-drawer-open {
 	overflow: hidden;
 }
 
+.skip-link {
+	background: #fffdf7;
+	border: 2px solid #246c53;
+	border-radius: 0.5rem;
+	color: #17211c;
+	font-weight: 750;
+	left: 1rem;
+	padding: 0.7rem 1rem;
+	position: fixed;
+	top: 1rem;
+	transform: translateY(calc(-100% - 2rem));
+	transition: transform 120ms ease;
+	z-index: 100;
+}
+
+.skip-link:focus {
+	transform: translateY(0);
+}
+
 button {
 	background-color: transparent;
 	border: 1px solid #246c53;
@@ -60,5 +79,9 @@ button:disabled {
 @media (prefers-reduced-motion: reduce) {
 	html {
 		scroll-behavior: auto;
+	}
+
+	.skip-link {
+		transition: none;
 	}
 }

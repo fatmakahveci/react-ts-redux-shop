@@ -2,6 +2,9 @@ import * as yup from "yup";
 import { getProduct, MAX_CART_REVISION } from "./constants";
 import type { CartMutation, PersistedCart } from "./types";
 
+export const MUTATION_ID_PATTERN =
+	/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 const cartItemSchema = yup
 	.object({
 		id: yup
@@ -39,6 +42,10 @@ export const persistedCartSchema: yup.ObjectSchema<PersistedCart> = yup
 export const cartMutationSchema: yup.ObjectSchema<CartMutation> = yup
 	.object({
 		delta: yup.number().oneOf([-1, 1]).required() as yup.NumberSchema<-1 | 1>,
+		mutationId: yup
+			.string()
+			.matches(MUTATION_ID_PATTERN, "Invalid mutation ID")
+			.required(),
 		productId: yup
 			.string()
 			.trim()

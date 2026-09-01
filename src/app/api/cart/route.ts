@@ -7,7 +7,10 @@ import {
 	readLimitedJson,
 } from "@/server/http";
 import { logServerError } from "@/server/logger";
-import { validateCartMutation } from "@/shared/cart-schema";
+import {
+	MUTATION_ID_PATTERN,
+	validateCartMutation,
+} from "@/shared/cart-schema";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { ValidationError } from "yup";
@@ -121,9 +124,13 @@ export async function DELETE(request: Request): Promise<NextResponse> {
 				403
 			);
 		}
+		const mutationId = request.headers.get("idempotency-key");
+		if (!mutationId || !MUTATION_ID_PATTERN.test(mutationId)) {
+			return json({ message: "Invalid idempotency key." }, requestId, 400);
+		}
 
 		const sessionId = await getCartSessionId();
-		const result = await clearCart(sessionId);
+		const result = await clearCart(sessionId, mutationId);
 		if (result.rateLimited) {
 			return json(
 				{ cart: result.cart, message: "Too many cart updates." },

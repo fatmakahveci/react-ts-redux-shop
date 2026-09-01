@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validatePersistedCart } from "./cart-schema";
+import { validateCartMutation, validatePersistedCart } from "./cart-schema";
 
 describe("validatePersistedCart", () => {
 	it("accepts a valid persisted cart", async () => {
@@ -38,5 +38,20 @@ describe("validatePersistedCart", () => {
 		{ items: [], revision: Number.MAX_SAFE_INTEGER },
 	])("rejects malformed cart data", async (cart) => {
 		await expect(validatePersistedCart(cart)).rejects.toBeDefined();
+	});
+});
+
+describe("validateCartMutation", () => {
+	it("requires an idempotency-safe mutation ID", async () => {
+		await expect(
+			validateCartMutation({
+				delta: 1,
+				mutationId: "c26b00b5-1234-4123-8123-123456789abc",
+				productId: "p1",
+			})
+		).resolves.toMatchObject({ productId: "p1" });
+		await expect(
+			validateCartMutation({ delta: 1, mutationId: "predictable", productId: "p1" })
+		).rejects.toBeDefined();
 	});
 });

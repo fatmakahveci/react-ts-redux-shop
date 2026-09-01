@@ -1,11 +1,16 @@
 "use client";
 
 import { cartActions } from "@/app/store/cart-slice";
+import {
+	clearPendingCartMutations,
+	hasPendingCartMutations,
+	retryPendingCartMutations,
+} from "@/app/store/cart-actions";
 import { useAppDispatch } from "@/app/store/hooks";
 import { uiActions } from "@/app/store/ui-slice";
 import { validatePersistedCart } from "@/shared/cart-schema";
 import { formatCurrency } from "@/shared/format";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import styles from "./Checkout.module.css";
 
 type CheckoutProps = {
@@ -24,19 +29,34 @@ export default function Checkout({
 	const dispatch = useAppDispatch();
 	const [status, setStatus] = useState<CheckoutStatus>("idle");
 	const [orderNumber, setOrderNumber] = useState("");
+	const checkoutMutationId = useRef<string | null>(null);
+	const headingRef = useRef<HTMLHeadingElement>(null);
+
+	useEffect(() => {
+		if (status === "idle" || status === "complete") {
+			headingRef.current?.focus();
+		}
+	}, [status]);
 
 	const submitOrder = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		setStatus("processing");
 
 		try {
+			await dispatch(retryPendingCartMutations());
+			if (hasPendingCartMutations()) {
+				throw new Error("Cart changes are still waiting to sync");
+			}
+			checkoutMutationId.current ??= globalThis.crypto.randomUUID();
 			const response = await fetch("/api/cart", {
+				headers: { "Idempotency-Key": checkoutMutationId.current },
 				method: "DELETE",
 				signal: AbortSignal.timeout(10_000),
 			});
 			const body = (await response.json()) as { cart?: unknown };
 			if (!response.ok) throw new Error("Unable to place order");
 
+			clearPendingCartMutations();
 			dispatch(cartActions.hydrateCart(await validatePersistedCart(body.cart)));
 			setOrderNumber(
 				`QS-${globalThis.crypto.randomUUID().slice(0, 8).toUpperCase()}`
@@ -52,7 +72,9 @@ export default function Checkout({
 			<section aria-labelledby="cart-title" className={styles.complete}>
 				<span aria-hidden="true" className={styles.checkmark}>✓</span>
 				<p className={styles.eyebrow}>Order confirmed</p>
-				<h2 id="cart-title">Thank you for your order</h2>
+				<h2 id="cart-title" ref={headingRef} tabIndex={-1}>
+					Thank you for your order
+				</h2>
 				<p>
 					Your {itemCount} {itemCount === 1 ? "book is" : "books are"} being
 					prepared. This demo order did not collect or charge a card.
@@ -85,7 +107,9 @@ export default function Checkout({
 				← Back to cart
 			</button>
 			<p className={styles.eyebrow}>Secure demo checkout</p>
-			<h2 id="cart-title">Delivery details</h2>
+			<h2 id="cart-title" ref={headingRef} tabIndex={-1}>
+				Delivery details
+			</h2>
 			<p className={styles.intro}>
 				Your details stay in this browser and are not stored or sent to a
 				payment provider.
