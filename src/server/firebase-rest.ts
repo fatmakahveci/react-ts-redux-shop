@@ -218,7 +218,14 @@ async function parseStoredCart(raw: unknown, now: number): Promise<StoredCart> {
 	}
 
 	const wrapped = isRecord(raw) && "cart" in raw;
-	const cart = await validatePersistedCart(wrapped ? raw.cart : raw);
+	const rawCart = wrapped ? raw.cart : raw;
+	const normalizedCart =
+		isRecord(rawCart) &&
+		!("items" in rawCart) &&
+		typeof rawCart.revision === "number"
+			? { ...rawCart, items: [] }
+			: rawCart;
+	const cart = await validatePersistedCart(normalizedCart);
 	const expiresAt =
 		wrapped && typeof raw.expiresAt === "number"
 			? raw.expiresAt

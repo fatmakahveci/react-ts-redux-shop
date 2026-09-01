@@ -67,7 +67,15 @@ test("adds, opens, increments and removes a cart item", async ({ page }) => {
 	).toBeVisible();
 	await expect(cartButton).toContainText("0");
 	await page.getByRole("button", { name: "Continue browsing" }).click();
+	const persistedCartResponse = page.waitForResponse(
+		(response) =>
+			response.url().endsWith("/api/cart") &&
+			response.request().method() === "GET"
+	);
 	await page.reload();
+	const persistedCart = await persistedCartResponse;
+	expect(persistedCart.status()).toBe(200);
+	expect(await persistedCart.json()).toMatchObject({ cart: { items: [] } });
 	await expect(cartButton).toContainText("0");
 });
 

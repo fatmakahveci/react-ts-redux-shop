@@ -179,6 +179,29 @@ describe("Firebase REST client", () => {
 		});
 	});
 
+	it("restores empty item arrays omitted by Firebase", async () => {
+		useEmulator();
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue(
+				new Response(
+					JSON.stringify({
+						cart: { revision: 4 },
+						expiresAt: Date.now() + 60_000,
+						rateLimit: { count: 1, windowStartedAt: Date.now() },
+						updatedAt: Date.now(),
+					})
+				)
+			)
+		);
+		const { readCart } = await import("./firebase-rest");
+
+		await expect(readCart(sessionId)).resolves.toEqual({
+			items: [],
+			revision: 4,
+		});
+	});
+
 	it("enforces a distributed mutation limit stored with the cart", async () => {
 		useEmulator();
 		const now = Date.now();
