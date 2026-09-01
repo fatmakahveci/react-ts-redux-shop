@@ -105,6 +105,8 @@ Without Firebase environment variables, the storefront still renders and reports
 | `npm run test:e2e:emulator` | Run browser tests against an isolated local emulator |
 | `npm run check` | Run lint, typecheck, tests and build |
 
+GitHub Actions runs the complete quality suite and Firebase Emulator browser tests on pull requests and pushes to `main`. Failed browser runs retain their Playwright report for seven days. Dependabot groups weekly minor and patch updates, while major upgrades remain isolated for safer review.
+
 ## Security notes
 
 - Never expose `FIREBASE_PRIVATE_KEY` or commit a populated environment file.
