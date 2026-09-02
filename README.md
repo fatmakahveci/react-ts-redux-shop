@@ -1,5 +1,10 @@
 # The Quiet Shelf
 
+[![CI](https://github.com/fatmakahveci/react-ts-redux-shop/actions/workflows/ci.yml/badge.svg)](https://github.com/fatmakahveci/react-ts-redux-shop/actions/workflows/ci.yml)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js&logoColor=white)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE.md)
+
 A full-stack shopping-cart example built with Next.js App Router, React, Redux Toolkit, TypeScript, Firebase Realtime Database and Yup.
 
 ## UI preview
