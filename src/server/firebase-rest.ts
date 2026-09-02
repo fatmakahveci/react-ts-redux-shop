@@ -97,11 +97,20 @@ function readFirebaseEnvironment(): FirebaseEnvironment {
 	}
 
 	const parsedDatabaseURL = new URL(databaseURL);
-	const isLocalhost = ["127.0.0.1", "localhost"].includes(
-		parsedDatabaseURL.hostname
+	const isFirebaseHost = [".firebaseio.com", ".firebasedatabase.app"].some(
+		(suffix) => parsedDatabaseURL.hostname.endsWith(suffix)
 	);
-	if (parsedDatabaseURL.protocol !== "https:" && !isLocalhost) {
-		throw new Error("Firebase database URL must use HTTPS.");
+	if (
+		parsedDatabaseURL.protocol !== "https:" ||
+		!isFirebaseHost ||
+		parsedDatabaseURL.port ||
+		parsedDatabaseURL.pathname !== "/" ||
+		parsedDatabaseURL.search ||
+		parsedDatabaseURL.hash ||
+		parsedDatabaseURL.username ||
+		parsedDatabaseURL.password
+	) {
+		throw new Error("Firebase database URL must be a canonical HTTPS endpoint.");
 	}
 
 	return {

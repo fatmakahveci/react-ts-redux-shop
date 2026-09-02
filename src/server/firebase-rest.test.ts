@@ -75,6 +75,25 @@ describe("Firebase REST client", () => {
 		});
 	});
 
+	it.each([
+		"http://example.firebaseio.com",
+		"https://attacker.example",
+		"https://example.firebaseio.com.evil.test",
+		"https://user:password@example.firebaseio.com",
+		"https://example.firebaseio.com/unexpected-path",
+		"https://example.firebaseio.com?redirect=attacker",
+	])("rejects a non-canonical production database URL: %s", async (databaseURL) => {
+		process.env.FIREBASE_DATABASE_URL = databaseURL;
+		const fetchMock = vi.fn();
+		vi.stubGlobal("fetch", fetchMock);
+		const { readCart } = await import("./firebase-rest");
+
+		await expect(readCart(sessionId)).rejects.toThrow(
+			"Firebase database URL must be a canonical HTTPS endpoint."
+		);
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+
 	it("uses the local demo emulator without service-account credentials", async () => {
 		useEmulator();
 		const fetchMock = vi

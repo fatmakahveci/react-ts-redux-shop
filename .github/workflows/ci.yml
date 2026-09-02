@@ -26,7 +26,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npm audit --audit-level=high
+      - run: npm audit --audit-level=moderate
       - run: npm run check
 
   e2e:
@@ -67,4 +67,4 @@ jobs:
       - name: Review dependency changes
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
-          fail-on-severity: high
+          fail-on-severity: moderate
