@@ -133,3 +133,10 @@ GitHub Actions runs the complete quality suite and Firebase Emulator browser tes
 ## Current product scope
 
 Products are intentionally held in a small server-owned demo catalog. The cart is anonymous and session-based; a real checkout flow should move the catalog to a durable database and add authenticated accounts, inventory validation, tax/shipping calculation and payment processing.
+
+## Project Resources
+
+- [Changelog](CHANGELOG.md)
+- [Contributing guide](.github/CONTRIBUTING.md)
+- [Security policy](.github/SECURITY.md)
+- [License](LICENSE.md)
