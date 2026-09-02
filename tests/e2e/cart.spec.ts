@@ -300,6 +300,9 @@ test("has no automatically detectable accessibility violations", async ({ page }
 	await page.getByRole("button", { name: "Add My First Book to cart" }).click();
 	await expectSuccessfulMutation(await addResponse);
 	await page.getByRole("button", { name: /My Cart/i }).click();
+	await expect(
+		page.getByRole("dialog", { name: "Your Shopping Cart" })
+	).toBeVisible();
 	const drawerScan = await new AxeBuilder({ page })
 		.include('[role="dialog"]')
 		.analyze();
