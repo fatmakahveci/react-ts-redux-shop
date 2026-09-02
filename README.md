@@ -2,6 +2,12 @@
 
 A full-stack shopping-cart example built with Next.js App Router, React, Redux Toolkit, TypeScript, Firebase Realtime Database and Yup.
 
+## UI preview
+
+![Animated conceptual UI demo of The Quiet Shelf storefront, cart, and checkout](public/demo/storefront-demo.gif)
+
+> Animated conceptual preview based on the current storefront design and catalog artwork.
+
 ## Storefront features
 
 - Responsive six-book catalog with original local cover artwork.
