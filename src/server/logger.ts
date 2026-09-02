@@ -1,13 +1,15 @@
 type ErrorDetails = {
-	message: string;
 	name: string;
 };
 
 function errorDetails(error: unknown): ErrorDetails {
 	if (error instanceof Error) {
-		return { message: error.message, name: error.name };
+		// Error messages from SDKs and upstream services can contain URLs,
+		// credentials, request bodies, or other sensitive configuration. Keep
+		// operational logs useful without serializing attacker-controlled details.
+		return { name: error.name };
 	}
-	return { message: "Unknown error", name: "UnknownError" };
+	return { name: "UnknownError" };
 }
 
 export function logServerError(

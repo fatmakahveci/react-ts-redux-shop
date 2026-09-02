@@ -11,11 +11,12 @@ describe("server logger", () => {
 
 		const entry = JSON.parse(String(consoleError.mock.calls[0][0]));
 		expect(entry).toMatchObject({
-			error: { message: "failure", name: "Error" },
+			error: { name: "Error" },
 			event: "cart.test.failed",
 			level: "error",
 			requestId: "request-123",
 		});
+		expect(JSON.stringify(entry)).not.toContain("failure");
 		expect(entry.timestamp).toBeTruthy();
 	});
 
@@ -25,10 +26,7 @@ describe("server logger", () => {
 		logServerError("cart.test.failed", { secret: "hidden" }, "request-456");
 
 		const entry = JSON.parse(String(consoleError.mock.calls[0][0]));
-		expect(entry.error).toEqual({
-			message: "Unknown error",
-			name: "UnknownError",
-		});
+		expect(entry.error).toEqual({ name: "UnknownError" });
 		expect(JSON.stringify(entry)).not.toContain("hidden");
 	});
 });
