@@ -13,6 +13,10 @@ updates:
     labels:
       - dependencies
     groups:
+      vitest:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
       production-minor-and-patch:
         dependency-type: production
         update-types:
